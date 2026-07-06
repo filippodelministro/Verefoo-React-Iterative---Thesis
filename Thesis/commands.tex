@@ -1,5 +1,3 @@
-% !TEX encoding = IsoLatin
-
 % per inserire uno spazio "fantasma" nella definizione di un'abbreviazione
 \usepackage{xspace}
 
@@ -7,7 +5,7 @@
 \usepackage{doi}
 \renewcommand{\doitext}{DOI }% originally was "doi:"
 
-% per inserire correttamente le unità di misura SI (incluse quelle binarie)
+% per inserire correttamente le unitï¿½ di misura SI (incluse quelle binarie)
 \usepackage[binary-units]{siunitx}
 % se si desidera usare / invece che la potenza -1 per indicare "al secondo"
 \sisetup{per-mode=symbol}
@@ -35,7 +33,7 @@ escapechar=`
 \newcommand{\html}{HTML\xspace}
 \newcommand{\xhtml}{XHTML\xspace}
 
-% esempio di creazione di un'abbreviazione con un parametro (il cui uso è indicato da #1)
+% esempio di creazione di un'abbreviazione con un parametro (il cui uso ï¿½ indicato da #1)
 \newcommand{\cmd}[1]{\texttt{#1}\xspace}
 % per citare un RFC, es. \rfc{822}
 \newcommand{\rfc}[1]{RFC-#1\xspace}
@@ -44,7 +42,7 @@ escapechar=`
 \newcommand{\file}[1]{\texttt{#1}\xspace}
 % per inserire codice di esempio in-line
 \newcommand{\code}[1]{\lstinline|#1|}
-% importante per i pathname Windows perché non si può usare \ essendo un carattere riservato di Latex
+% importante per i pathname Windows perchï¿½ non si puï¿½ usare \ essendo un carattere riservato di Latex
 \newcommand{\bs}{\textbackslash}
 % definizione di un termine: formattazione ed inserimento nell'indice
 \newcommand{\tdef}[1]{\textit{#1}\index{#1}}
