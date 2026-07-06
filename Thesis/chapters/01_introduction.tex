@@ -1,7 +1,25 @@
 % !TEX root = ../tesi.tex
 
-% TODO: descrivere il contesto (network security automation, SMT solvers, VEREFOO)
-% TODO: motivare il problema (scalabilità dell'approccio monolitico)
-% TODO: descrivere l'obiettivo della tesi (approccio iterativo)
-% TODO: struttura della tesi
+\section{Context}
+% - Le reti enterprise moderne sono complesse: centinaia di nodi, servizi eterogenei, policy di sicurezza distribuite
+% - I packet-filtering firewall sono il meccanismo principale di enforcement delle policy
+% - La configurazione manuale non scala e non garantisce correttezza formale
+% - Serve un approccio automatizzato e formalmente corretto
 
+\section{VEREFOO}
+
+\subsection{Overview}
+% - Input: topologia di rete + insieme di NSR (Network Security Requirements)
+% - Output: allocazione ottimale dei firewall nella rete + configurazione delle regole
+% - Approccio: encoding come problema MaxSMT, risolto con Z3
+% - Obiettivo di ottimizzazione: minimizzare numero di firewall e regole allocate
+% - Garanzie: correttezza formale e ottimalità globale
+% - Limite: approccio monolitico => non scala al crescere della rete o degli NSR
+
+\subsection{React-VEREFOO}
+% - Motivazione: in ambienti reali le NSR cambiano nel tempo (aggiunta, modifica, revoca)
+% - Problema con VEREFOO vanilla: ricalcola tutto da zero ad ogni aggiornamento
+% - Approccio React: parte dalla configurazione esistente e calcola l'aggiornamento minimale
+% - Riutilizza le regole già esistenti il più possibile
+% - Riduce la complessità del problema SMT rispetto al caso monolitico
+% - Mantiene le garanzie di correttezza formale

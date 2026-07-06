@@ -41,6 +41,9 @@
     \AdvisorName{Supervisor}
 }{}
 
+\renewcommand{\summaryname}{}
+\renewcommand{\contentsname}{Index}
+
 \frontespizio
 \paginavuota
 \newpage
@@ -48,33 +51,26 @@
 \advance\textheight 30mm
 
 \sommario
-
-% TODO: inserire il sommario della tesi
+\input{chapters/00_abstract.tex}
 
 \indici
 
 \mainmatter
 
-\chapter{Introduction}
+\chapter{Introduction}\label{chap:introduction}
 \input{chapters/01_introduction.tex}
 
-\chapter{Background}
-\input{chapters/02_background.tex}
+\chapter{Iterative React-VEREFOO}\label{chap:iterative}
+\input{chapters/02_iterative.tex}
 
-\chapter{Related Work}
-\input{chapters/03_related_work.tex}
+\chapter{Experimental Evaluation}\label{chap:evaluation}
+\input{chapters/03_evaluation.tex}
 
-\chapter{Design of the Iterative Approach}
-\input{chapters/04_design.tex}
+\chapter{Conclusions}\label{chap:conclusions}
+\input{chapters/04_conclusions.tex}
 
-\chapter{Implementation}
-\input{chapters/05_implementation.tex}
-
-\chapter{Experimental Evaluation}
-\input{chapters/06_evaluation.tex}
-
-\chapter{Conclusions}
-\input{chapters/07_conclusions.tex}
+\chapter{Executive Summary}\label{chap:summary}
+\input{chapters/05_executive_summary.tex}
 
 \bibliographystyle{torsec}
 \bibliography{biblio}
