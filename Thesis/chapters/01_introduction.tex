@@ -1,25 +1,24 @@
 % !TEX root = ../tesi.tex
 
 \section{Context}
-% - Le reti enterprise moderne sono complesse: centinaia di nodi, servizi eterogenei, policy di sicurezza distribuite
-% - I packet-filtering firewall sono il meccanismo principale di enforcement delle policy
-% - La configurazione manuale non scala e non garantisce correttezza formale
-% - Serve un approccio automatizzato e formalmente corretto
+Modern enterprise networks are characterized by growing complexity: hundreds of interconnected nodes, heterogeneous services, and security policies that must be consistently enforced across distributed infrastructure.
+Packet-filtering firewalls represent the primary mechanism for enforcing such policies, selectively allowing or blocking traffic flows based on predefined rules. However, as networks scale in size and dynamism, manually configuring firewalls becomes error-prone, time-consuming, and increasingly difficult to reason about in terms of formal correctness.
+An automated approach is therefore necessary --- one that can guarantee both the correctness of the generated configuration and its optimality with respect to resource usage. It is in this context that VEREFOO was developed: a tool for the automated, formally correct allocation of firewalls within a network topology and the automatic generation of their filtering rules.
+
 
 \section{VEREFOO}
 
 \subsection{Overview}
-% - Input: topologia di rete + insieme di NSR (Network Security Requirements)
-% - Output: allocazione ottimale dei firewall nella rete + configurazione delle regole
-% - Approccio: encoding come problema MaxSMT, risolto con Z3
-% - Obiettivo di ottimizzazione: minimizzare numero di firewall e regole allocate
-% - Garanzie: correttezza formale e ottimalità globale
-% - Limite: approccio monolitico => non scala al crescere della rete o degli NSR
+
+VEREFOO (VErification REasoning on Firewall Optimization) is a tool designed to automate the allocation and configuration of packet-filtering firewalls in a network. It takes as input a network topology, a set of Network Security Requirements (NSRs) --- high-level specifications of which traffic flows must be allowed or denied --- and a Firewall Allocation Schema (FAS), which defines the candidate positions in the topology where firewalls may be placed. From these inputs, VEREFOO produces two outputs: an updated topology indicating which nodes have been allocated as active firewalls, and a vendor-independent configuration for each firewall specifying the filtering rules to be enforced. The tool guarantees three fundamental properties: \textit{automation}, as the entire allocation and configuration process requires no manual intervention; \textit{formal correctness}, as the generated configuration is proven to satisfy all specified NSRs; and \textit{optimality}, as the number of allocated firewalls and generated rules is minimised. These guarantees are achieved by encoding the problem as a MaxSMT instance and solving it with the Z3 solver. The resulting configuration can further be translated into vendor-specific formats, currently supporting iptables, BPF, and OVS.
 
 \subsection{React-VEREFOO}
-% - Motivazione: in ambienti reali le NSR cambiano nel tempo (aggiunta, modifica, revoca)
+% - Motivazione: in ambienti reali le NSR cambiano nel tempo (aggiunta, modifica, revoca) e possibilmente in modo dinamico
 % - Problema con VEREFOO vanilla: ricalcola tutto da zero ad ogni aggiornamento
-% - Approccio React: parte dalla configurazione esistente e calcola l'aggiornamento minimale
+% - Approccio React: parte dalla configurazione esistente e calcola l'aggiornamento minimale, considerando solo le NSR nuove o modificate
 % - Riutilizza le regole già esistenti il più possibile
 % - Riduce la complessità del problema SMT rispetto al caso monolitico
 % - Mantiene le garanzie di correttezza formale
+% - Limite: se il numero di NSR nuove o modificate è elevato, il problema può comunque diventare complesso e richiedere molto tempo di calcolo;
+% al contrario, un numero ridotto di NSR può permettere di ottenere una soluzione ottimale in tempi ragionevoli.
+% L'idea di questo lavoro è di estremizzare questo approccio incrementale, introducendo un metodo iterativo che processa le NSR una alla volta, riducendo ulteriormente la complessità di ogni singolo passo e potenzialmente migliorando i tempi di calcolo complessivi.
