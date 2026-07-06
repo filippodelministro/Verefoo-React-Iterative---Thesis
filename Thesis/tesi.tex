@@ -1,0 +1,84 @@
+% !TEX encoding = IsoLatin
+
+\documentclass[pdfa
+,cucitura
+%,twoside
+]{toptesi}
+
+\usepackage{hyperref}
+\hypersetup{%
+    pdfpagemode={UseOutlines},
+    bookmarksopen,
+    pdfstartview={FitH},
+    colorlinks,
+    linkcolor={blue},
+    citecolor={red},
+    urlcolor={blue}
+}
+
+\usepackage[latin1]{inputenc}
+
+\input{commands.tex}
+
+\begin{document}
+
+\ateneo{Politecnico di Torino}
+
+\titolo{Iterative Approach for Network Security Automation}
+
+\corsodilaurea{Ingegneria Informatica}
+
+\candidato{Filippo \textsc{Del Ministro}}
+
+\relatore{prof.\ Antonio Lioy}
+
+\sedutadilaurea{\textsc{Anno accademico} 2025-2026}
+
+\logosede{logopolito}
+
+\iflanguage{english}{
+    \CorsoDiLaureaIn{Master degree course in\space}
+    \TesiDiLaurea{Master Degree Thesis}
+    \CandidateName{Candidate}
+    \AdvisorName{Supervisor}
+}{}
+
+\frontespizio
+\paginavuota
+\newpage
+\advance\voffset -5mm
+\advance\textheight 30mm
+
+\sommario
+
+% TODO: inserire il sommario della tesi
+
+\indici
+
+\mainmatter
+
+\chapter{Introduction}
+\input{chapters/01_introduction.tex}
+
+\chapter{Background}
+\input{chapters/02_background.tex}
+
+\chapter{Related Work}
+\input{chapters/03_related_work.tex}
+
+\chapter{Design of the Iterative Approach}
+\input{chapters/04_design.tex}
+
+\chapter{Implementation}
+\input{chapters/05_implementation.tex}
+
+\chapter{Experimental Evaluation}
+\input{chapters/06_evaluation.tex}
+
+\chapter{Conclusions}
+\input{chapters/07_conclusions.tex}
+
+\bibliographystyle{torsec}
+\bibliography{biblio}
+
+\end{document}
