@@ -1,11 +1,20 @@
 % !TEX root = ../tesi.tex
 
 \section{Idea of the Solution}
-% - Invece di processare tutti gli NSR insieme, introdurli uno alla volta
-% - Ad ogni iterazione: configurazione corrente = stato iniziale, React-VEREFOO aggiunge un NSR
-% - Schema: iter 1 => initProp + A, iter 2 => (initProp+A) + B, iter 3 => (initProp+A+B) + C, ...
-% - Ogni sottoproblema è più piccolo => potenziale riduzione del tempo di solving
-% - Trade-off atteso: tempo totale ridotto vs possibile perdita di ottimalità globale
+
+As discussed in the introduction, React-VEREFOO is most effective when the number of additional requirements is small relative to the total. The key idea of the approach is to push that observation to its logical extreme: instead of processing all new NSRs at once, the proposed approach introduces them one at a time, turning the configuration problem into a sequence of minimal reconfiguration steps.
+
+The process works as follows. At each iteration, \textbf{the current firewall configuration is treated as the initial state and one single new NSR is added as the target}. React-VEREFOO is then invoked to compute the minimal update needed to satisfy that one additional requirement. The output of each iteration, meaning the updated allocation scheme and the associated filtering rules becomes the initial state for the next one. This continues until all NSRs have been incorporated. 
+\\Formally, if the set of additional NSRs to be processed is $\{A, B, C, \ldots\}$ and $P_0$ denotes the initial set of properties already enforced in the network, the sequence of iterations is:
+
+\begin{enumerate}
+  \item initial: $P_0$, additional: $\{A\}$
+  \item initial: $\{P_0, A\}$, additional: $\{B\}$
+  \item initial: $\{P_0, A, B\}$, additional: $\{C\}$
+  \item \ldots
+\end{enumerate}
+
+Since each invocation of React-VEREFOO deals with exactly one added requirement, the portion of the network that must be reconsidered at each step is minimised by construction. This keeps each individual MaxSMT subproblem small, regardless of the total number of NSRs, with the expectation of reducing overall computation time. The number of iteration steps is equal to the number of new NSRs, which is a linear factor, but the reduced complexity of each step is expected to more than compensate for that.
 
 \section{Implementation}
 % - File modificati in React-VEREFOO e come
