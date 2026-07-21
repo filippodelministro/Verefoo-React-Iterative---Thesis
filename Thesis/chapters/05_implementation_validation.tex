@@ -28,7 +28,21 @@
 % - Tabelle/grafici dei tempi di esecuzione per ogni dataset
 % - Andamento al crescere del numero di NSR
 % - Andamento al crescere della dimensione della rete
-% TODO: inserire grafici e tabelle con i dati sperimentali
+
+Figure~\ref{fig:results_comparison} reports the average execution times measured across the three benchmark topologies. Each data point represents the mean over 20 runs. The Y-axis uses a logarithmic scale to accommodate the wide range of values observed, particularly for larger networks.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{images/results_comparison.pdf}
+    \caption{Execution time comparison between React-Iterative VEREFOO and Vanilla VEREFOO across three benchmark topologies.}
+    \label{fig:results_comparison}
+\end{figure}
+
+% On the \textbf{Stanford} network with Configuration 2 (Figure~\ref{fig:results_comparison}a), where port-specific rules are disabled (\texttt{PortSpecifics = 0.00}), Vanilla VEREFOO achieves shorter execution times than React-Iterative across all tested NSR counts. This is expected: when the underlying MaxSMT problem is structurally simple, the overhead introduced by the iterative loop outweighs any per-iteration gain.
+
+% On \textbf{CESNET} (Figure~\ref{fig:results_comparison}b), only React-Iterative results are available. The execution time grows approximately linearly with the number of NSRs, remaining below 2.1 seconds even at 120 NSRs, suggesting the approach scales well on this topology.
+
+% On the \textbf{Texas 2000} topology (Figure~\ref{fig:results_comparison}c), both approaches show an increasing trend as the number of NSRs grows, but the gap between them widens significantly at larger scales. React-Iterative consistently requires more time than Vanilla VEREFOO, with the difference becoming more pronounced beyond 144 NSRs.
 
 \subsection{Comparison and Discussion}
 % - Iterativo vs monolitico: quando l'approccio iterativo è più veloce?

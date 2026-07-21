@@ -17,8 +17,30 @@ The gap between the complexity of modern networks and the limitations of manual 
 
 \subsection{Overview}
 
-VEREFOO (VErification REasoning on Firewall Optimization) is a tool designed to automate the allocation and configuration of packet-filtering firewalls in a network.
-It takes as input a network topology, a set of Network Security Requirements (NSRs) and a Firewall Allocation Schema (FAS), which defines the candidate positions in the topology where firewalls may be placed. From these inputs, VEREFOO produces two outputs: an updated topology indicating which nodes have been allocated as active firewalls, and a vendor-independent configuration for each firewall specifying the filtering rules to be enforced. The tool guarantees three fundamental properties: \textit{automation}, as the entire allocation and configuration process requires no manual intervention; \textit{formal correctness}, as the generated configuration is proven to satisfy all specified NSRs; and \textit{optimality}, as the number of allocated firewalls and generated rules is minimised. These guarantees are achieved by encoding the problem as a MaxSMT instance and solving it with the Z3 solver. The resulting configuration can further be translated into vendor-specific formats.
+% - Verefoo serve per automatizzare l'allocazione e la configurazione dei firewall di tipo packet-filtering in una rete
+% - Il grande vantaggio è che l'allocazione e la configurazione dei firewall avviene in maniera automatica, senza intervento umano
+% - Input: topologia di rete + insieme di NSR (Network Security Requirements)
+% - Output: allocazione ottimale dei firewall nella rete + configurazione delle regole
+% - Garanzie: correttezza formale e ottimalità globale
+% - Approccio: encoding come problema MaxSMT, risolto con Z3
+% - Obiettivo di ottimizzazione: minimizzare numero di firewall e regole allocate
+% - todo: Spiegare il concetto di Service Graph 
+% - todo: Spiegare il concetto di Firewall Allocation Schema (FAS) 
+% - check: Verefoo non ragiona su singoli pacchetti, ma su flussi di traffico
+% - Verefoo é stato testato su reti reali e sintetiche (Stanford e CESNET) dimostrando affidabilitá e scalabilitá
+% - Limite: approccio monolitico  $\rightarrow$  non scala al crescere della rete o degli NSR
+
+VEREFOO (VErification REasoning on Firewall Optimization) is a tool designed to automate the allocation and configuration of packet-filtering firewalls in a network, eliminating the need for manual intervention entirely. Given a network topology and a set of Network Security Requirements (NSRs) --- high-level specifications describing which traffic flows must be allowed or denied between network endpoints --- VEREFOO automatically determines where firewalls should be placed within the topology and generates the corresponding filtering rules for each allocated instance. The resulting configuration is expressed in a vendor-independent format, which can then be translated into concrete rules for specific implementations such as iptables, BPF, or OVS.
+
+The tool provides three formal guarantees. \textit{Automation} ensures that no human intervention is required at any stage of the process. \textit{Formal correctness} guarantees that the generated configuration satisfies all specified NSRs by construction, eliminating the risk of undetected misconfigurations. \textit{Optimality} ensures that both the number of allocated firewall instances and the number of generated rules are minimised, reducing resource consumption and improving performance. These properties are achieved by encoding the firewall allocation and configuration problem as a partial weighted Maximum Satisfiability Modulo Theories (MaxSMT) instance, which is then solved using the Z3 SMT solver. The hard constraints of the problem encode the correctness requirements, while the soft constraints encode the optimality objectives; the solver finds a solution that satisfies all hard constraints and maximises the sum of satisfied soft constraint weights.
+
+- todo: Spiegare il concetto di Service Graph 
+- todo: Spiegare il concetto di Firewall Allocation Schema (FAS) => immagine FAS
+- check: Verefoo non ragiona su singoli pacchetti, ma su flussi di traffico => spiegare benefici
+
+VEREFOO has been validated on both synthetic and real-world network topologies, including well-known benchmarks such as the Stanford and CESNET networks, demonstrating reliability and scalability across a range of network sizes and requirement sets~\cite{verefoo}.
+
+Despite these strengths, VEREFOO's monolithic approach has a fundamental scalability limitation: the entire set of NSRs and the full network topology are encoded into a single MaxSMT problem. As the number of requirements or the size of the network grows, the complexity of the problem increases significantly, leading to prohibitive computation times. This limitation motivates the development of more efficient alternatives, starting with React-VEREFOO.
 
 \subsection{React-VEREFOO}
 
