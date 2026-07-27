@@ -1,5 +1,27 @@
 % !TEX root = ../tesi.tex
 
-% TODO: breve descrizione del contesto e del problema (rimandare al cap. Background per i dettagli)
-% TODO: obiettivo della tesi
-% TODO: struttura della tesi (rimandare ai capitoli)
+
+% - Contesto architetturale: reti dinamiche e cambiamenti veloci
+% - Problema della configurazione manuale
+% - VEREFOO come soluzione monolitica 
+% ─ React-VEREFOO: soluzione incrementale efficace con pochi cambiamenti
+% ─ Obiettivo della tesi: approccio iterativ
+
+% ─ Struttura della tesi
+% Chapter 2: Background (network security automation, VEREFOO, React-VEREFOO)
+% Chapter 3: Thesis Objectives (problem statement and idea of the iterative approach)
+% Chapter 4: The Iterative VEREFOO Approach (theoretical presentation)
+% Chapter 5: Implementation and Validation (implementation details + experimental evaluation)
+% Chapter 6: Conclusions and Future Work
+
+Modern enterprise networks are large, dynamic infrastructures that change continuously. New services are deployed, nodes are added or removed, and connectivity requirements evolve at a pace that security policy management must match. At the same time, these networks span hundreds of heterogeneous nodes distributed across sites and organisational boundaries, making security enforcement a complex and ongoing operational challenge. Packet-filtering firewalls are the primary mechanism for enforcing security policies, and their correct configuration is essential to prevent unauthorized access, data breaches, and service disruptions. A thorough discussion of this context is provided in Chapter~\ref{chap:background}.
+
+The traditional approach to firewall configuration — manual translation of high-level security requirements into device-level rules — does not scale to modern network environments. As networks grow in size and change more frequently, the volume and complexity of rules to be managed quickly exceeds human capacity. More critically, manual processes offer no formal guarantee of correctness: a single misconfiguration may silently violate security requirements or block legitimate traffic, with consequences that can remain undetected for extended periods.
+
+VEREFOO was developed to address this problem through full automation. Given a network topology and a set of Network Security Requirements (NSRs), it automatically determines where firewalls should be placed and what filtering rules each should enforce, with formal guarantees of correctness and optimality. It achieves this by encoding the problem as a Maximum Satisfiability Modulo Theories (MaxSMT) instance solved by the Z3 solver. However, VEREFOO follows a monolithic strategy: any change to the NSR set triggers a complete recomputation from scratch, making it poorly suited to dynamic environments where requirements change frequently.
+
+React-VEREFOO addressed this limitation by adopting an incremental approach. Rather than discarding the existing configuration, it identifies which NSRs are new, which have been removed, and which are unchanged, and restricts the solver to only the affected parts of the network. This yields significant speedups when the number of modified requirements is small. However, when a large fraction of the NSR set changes simultaneously, the advantage diminishes and performance converges toward that of the monolithic baseline.
+
+This thesis proposes a strategy that preserves the benefits of the incremental approach regardless of how many new requirements are introduced at once. The key idea is to push the incremental principle to its extreme: new NSRs are introduced one at a time, each in a separate invocation of React-VEREFOO that takes the current configuration as its starting point. By construction, the modified fraction at each step is always minimal — a single requirement — so the subproblem remains small and the performance advantage of the incremental approach is consistently in effect. The full formulation of the approach and the thesis objectives are presented in Chapters~\ref{chap:objectives} and~\ref{chap:iterative}.
+
+The remainder of the thesis is organised as follows. Chapter~\ref{chap:background} provides the necessary background on network security automation, VEREFOO, and React-VEREFOO. Chapter~\ref{chap:objectives} states the thesis objectives and introduces the iterative approach at a high level. Chapter~\ref{chap:iterative} develops the approach from a theoretical perspective. Chapter~\ref{chap:implementation} describes the implementation and reports the experimental evaluation on three benchmark topologies: the Stanford university network, the CESNET academic network, and the Texas~2000 synthetic topology. Chapter~\ref{chap:conclusions} draws conclusions and outlines directions for future work.

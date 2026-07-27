@@ -1,7 +1,7 @@
 % !TEX root = ../tesi.tex
 
 
-Modern enterprise networks are complex, distributed systems in which security policy enforcement is a critical and continuous operational challenge. As topologies grow in scale and heterogeneity, the manual configuration of packet-filtering firewalls becomes increasingly error-prone. Misconfigurations — whether overly permissive or overly restrictive — can expose sensitive resources or degrade service availability. The shift toward microsegmentation, distributing enforcement across multiple firewall instances throughout the network, improves security granularity but amplifies the management burden. Automated tools that generate formally correct and optimal configurations are therefore essential.
+Modern enterprise networks are complex, distributed systems in which security policy enforcement is a critical and continuous operational challenge. As topologies grow in scale and heterogeneity, the manual configuration of packet-filtering firewalls becomes increasingly error-prone. Misconfigurations can expose sensitive resources or degrade service availability. The shift toward microsegmentation, distributing enforcement across multiple firewall instances throughout the network, improves security granularity but amplifies the management effort. Automated tools that generate formally correct and optimal configurations are therefore essential.
 
 VEREFOO (VErification REasoning on Firewall Optimization) addresses this need by automatically computing firewall allocation and configuration from a network topology and a set of Network Security Requirements (NSRs). It encodes the problem as a Maximum Satisfiability Modulo Theories (MaxSMT) instance solved by the Z3 solver, guaranteeing formal correctness and minimality of the result. However, VEREFOO follows a monolithic approach: every time the NSR set changes, the entire problem is re-encoded and solved from scratch, scaling poorly as the network or requirement set grows.
 
@@ -11,4 +11,4 @@ This thesis pushes the incremental principle to its extreme. The proposed Iterat
 
 % ── Conclusions (1/5) ────────────────────────────────────────────────────────
 
-The approach has been implemented as a modification of the React-VEREFOO codebase and evaluated on three benchmark topologies: the Stanford university network, the CESNET academic network, and the Texas 2000 synthetic topology. Results show that the iterative method scales linearly with the number of NSRs, maintaining consistent execution times as the requirement set grows. On configurations where vanilla VEREFOO encounters unsatisfiable instances or prohibitive runtimes, the iterative method continues to produce valid results, confirming the viability of fine-grained incremental reconfiguration for network security automation in dynamic environments.
+% todo:TO WRITE CONCLUSIONS!!
