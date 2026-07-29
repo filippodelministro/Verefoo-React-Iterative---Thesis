@@ -12,6 +12,26 @@ In this context, the configuration of firewalls becomes a critical task. On one 
 
 The gap between the complexity of modern networks and the limitations of manual security management calls for automated approaches that can generate correct and optimal firewall configurations without human intervention. It is in this context that VEREFOO was developed: a tool for the automated, formally correct allocation and configuration of distributed firewalls, designed to bridge exactly this gap.
 
+% todo: Add here perimtral-FW.jpg and distributed-FW.jpg images to illustrate the difference between traditional and modern network security architectures.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/Perimetral-FW.jpg}
+        \subcaption{Traditional perimeter firewall architecture.}
+        \label{fig:perimetral-fw}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{images/Distributed-FW-white.jpg}
+        \subcaption{Distributed firewall architecture (microsegmentation).}
+        \label{fig:distributed-fw}
+    \end{minipage}
+    \caption{Evolution of network security architectures: from a single perimeter firewall to distributed packet-filtering instances deployed across the topology.}
+    \label{fig:fw-architectures}
+\end{figure}
 
 \section{VEREFOO}
 
@@ -32,15 +52,19 @@ The gap between the complexity of modern networks and the limitations of manual 
 
 VEREFOO (VErification REasoning on Firewall Optimization) is a tool designed to automate the allocation and configuration of packet-filtering firewalls in a network, eliminating the need for manual intervention entirely. Given a network topology and a set of Network Security Requirements (NSRs) --- high-level specifications describing which traffic flows must be allowed or denied between network endpoints --- VEREFOO automatically determines where firewalls should be placed within the topology and generates the corresponding filtering rules for each allocated instance. The resulting configuration is expressed in a vendor-independent format, which can then be translated into concrete rules for specific implementations such as iptables, BPF, or OVS.
 
+% todo: add a figure illustrating the input and output of VEREFOO, showing a network topology with NSRs as input and the resulting firewall allocation and rule sets as output
+
 The tool provides three formal guarantees. \textit{Automation} ensures that no human intervention is required at any stage of the process. \textit{Formal correctness} guarantees that the generated configuration satisfies all specified NSRs by construction, eliminating the risk of undetected misconfigurations. \textit{Optimality} ensures that both the number of allocated firewall instances and the number of generated rules are minimised, reducing resource consumption and improving performance. These properties are achieved by encoding the firewall allocation and configuration problem as a partial weighted Maximum Satisfiability Modulo Theories (MaxSMT) instance, which is then solved using the Z3 SMT solver. The hard constraints of the problem encode the correctness requirements, while the soft constraints encode the optimality objectives; the solver finds a solution that satisfies all hard constraints and maximises the sum of satisfied soft constraint weights.
 
-- todo: Spiegare il concetto di Service Graph 
-- todo: Spiegare il concetto di Firewall Allocation Schema (FAS) => immagine FAS
-- check: Verefoo non ragiona su singoli pacchetti, ma su flussi di traffico => spiegare benefici
+%todo: Spiegare il concetto di Service Graph 
+%todo: Spiegare il concetto di Firewall Allocation Schema (FAS) => immagine FAS
+%?: Verefoo non ragiona su singoli pacchetti, ma su flussi di traffico %todo => spiegare benefici
 
 VEREFOO has been validated on both synthetic and real-world network topologies, including well-known benchmarks such as the Stanford and CESNET networks, demonstrating reliability and scalability across a range of network sizes and requirement sets~\cite{verefoo}.
 
 Despite these strengths, VEREFOO's monolithic approach has a fundamental scalability limitation: the entire set of NSRs and the full network topology are encoded into a single MaxSMT problem. As the number of requirements or the size of the network grows, the complexity of the problem increases significantly, leading to prohibitive computation times. This limitation motivates the development of more efficient alternatives, starting with React-VEREFOO.
+
+% todo: add image of FAS (Firewall Allocation Schema) to illustrate the concept visually.
 
 \subsection{React-VEREFOO}
 
@@ -49,3 +73,5 @@ In operational environments, network security policies are not static: NSRs evol
 React-VEREFOO takes as input both the existing firewall configuration and the updated set of security requirements, and computes only the minimal changes needed to bring the network into compliance. Rather than reconsidering the entire problem, it identifies which requirements are new, which have been removed, and which remain unchanged. Only the newly added requirements drive the reconfiguration: the approach determines which parts of the network are affected and restricts the solver to those areas, leaving the rest of the configuration untouched. The result is an updated firewall allocation and rule set that satisfies all current requirements, with the same guarantees of correctness and optimality as VEREFOO.
 
 Experimental results show that React-VEREFOO is significantly more efficient than vanilla VEREFOO when the proportion of modified NSRs is small, as the reduced problem size leads to much shorter solving times. However, when a large fraction of the requirements changes, the benefits is reduced and React-VEREFOO's performance becomes comparable to that of the monolithic approach. This observation motivates the approach investigated in this thesis: by pushing the incremental logic to its extreme - introducing only one new NSR per iteration - the proportion of modified requirements is always minimised, potentially achieving consistent speedups regardless of the total number of requirements.
+
+% todo: add illustration of React-VEREFOO approach; showing the difference between VEREFOO Vanilla

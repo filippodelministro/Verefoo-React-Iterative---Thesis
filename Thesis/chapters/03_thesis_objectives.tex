@@ -18,3 +18,6 @@ The process works as follows. At each iteration, \textbf{the current firewall co
 \end{enumerate}
 
 Since each invocation of React-VEREFOO deals with exactly one added requirement, the portion of the network that must be reconsidered at each step is minimised by construction. This keeps each individual MaxSMT subproblem small, regardless of the total number of NSRs, with the expectation of reducing overall computation time. The number of iteration steps is equal to the number of new NSRs, which is a linear factor, but the reduced complexity of each step is expected to more than compensate for that.
+
+% todo: add figure showing the iterative approach, with a sequence of iterations and the current configuration being passed to the next iteration
+
