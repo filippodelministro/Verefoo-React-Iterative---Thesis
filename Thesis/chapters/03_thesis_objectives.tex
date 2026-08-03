@@ -2,22 +2,69 @@
 
 \section{Idea of the Solution}
 
-- estremizzare l'approccio di React Verefoo: se React Verefoo é più veloce di Verefoo quando il numero di NSR aggiuntivi é piccolo, allora proviamo ad introdurre un solo NSR alla volta. In questo modo il numero di NSR modificati ad ogni iterazione é sempre minimo, e quindi l'overhead introdotto dall'approccio iterativo dovrebbe essere sempre compensato dal fatto che il problema da risolvere ad ogni iterazione é molto più piccolo.
+% - estremizzare l'approccio di React Verefoo: se React Verefoo é più veloce di Verefoo quando il numero di NSR aggiuntivi é piccolo, allora proviamo ad introdurre un solo NSR alla volta. In questo modo il numero di NSR modificati ad ogni iterazione é sempre minimo, e quindi l'overhead introdotto dall'approccio iterativo dovrebbe essere sempre compensato dal fatto che il problema da risolvere ad ogni iterazione é molto più piccolo.
 
+To understand the motivation of this thesis, it is necessary to examine how React-VEREFOO determines what to reconfigure. Given an initial set of NSRs $R_i$ already enforced in the network and a target set $R_t$ that must be enforced after reconfiguration, React-VEREFOO classifies every requirement into one of three groups~\cite{reactverefoo}:
 
-As discussed in the introduction, React-VEREFOO is most effective when the number of additional requirements is small relative to the total~\cite{reactverefoo}. The key idea of the approach is to push that observation to its logical extreme: instead of processing all new NSRs at once, the proposed approach introduces them one at a time, turning the configuration problem into a sequence of minimal reconfiguration steps.
+\begin{itemize}
+  \item $R_d = \{r \in R_i \mid r \notin R_t\}$: \textit{deleted} requirements, present in the initial configuration but no longer needed;
+  \item $R_a = \{r \in R_t \mid r \notin R_i\}$: \textit{added} requirements, new requirements that must be enforced but are not yet satisfied;
+  \item $R_k = \{r \in R_t \mid r \in R_i\}$: \textit{kept} requirements, already enforced and still valid in the target configuration.
+\end{itemize}
 
-The process works as follows. At each iteration, \textbf{the current firewall configuration is treated as the initial state and one single new NSR is added as the target}. React-VEREFOO is then invoked to compute the minimal update needed to satisfy that one additional requirement. The output of each iteration, meaning the updated allocation scheme and the associated filtering rules becomes the initial state for the next one. This continues until all NSRs have been incorporated.
-\\Formally, if the set of additional NSRs to be processed is $\{A, B, C, \ldots\}$ and $P_0$ denotes the initial set of properties already enforced in the network, the sequence of iterations is:
+Only the added requirements $R_a$ drive the reconfiguration: React-VEREFOO identifies which nodes in the Allocation Graph are in conflict with each added NSR and restricts the solver to those areas, while leaving the rest of the configuration untouched. The final MaxSMT problem models all traffic flows for the target set $R_t = R_a \cup R_k$, but the decision variables are limited to the nodes identified as needing reconfiguration, making the problem significantly smaller than a full recomputation~\cite{reactverefoo}.
+
+The key performance parameter is the proportion of kept requirements, which can be defined as:
+\[
+  \text{PercReqKept} = \frac{|R_k|}{|R_k| + |R_a| + |R_d|}
+\]
+The higher this ratio, the smaller the added and deleted sets, and consequently the narrower the network area that must be reconsidered. Experimental results in~\cite{reactverefoo} confirm that the approach yields its greatest speedups at high values of PercReqKept (90\% and above), and that performance converges toward the vanilla baseline as PercReqKept decreases. This is consistent with real-world operational patterns: studies of large-scale infrastructure~\cite{reactverefoo} report that the vast majority of configuration updates affect only a small fraction of the total rule set, making high PercReqKept the typical case in practice.
+
+The key idea of this thesis is to push this observation to its logical extreme. Instead of processing all new NSRs in a single reconfiguration step, the proposed approach introduces them \textbf{one at a time}. At each step, only one new requirement is presented to React-VEREFOO as added, while everything enforced so far falls into the kept set. This means the reconfiguration area identified at each step is always the smallest it could possibly be — a single requirement drives each solver call, regardless of how many requirements must ultimately be incorporated. The proportion of kept requirements is therefore always at its theoretical maximum for the given state of the network, and grows larger with every iteration as the kept set expands.
+
+Formally, at each iteration $i$, the current configuration enforces $R_k^{(i)} = R_i \cup \{A_1, \ldots, A_{i-1}\}$ and the single new requirement $A_i$ constitutes the entire added set $R_a^{(i)} = \{A_i\}$. This gives:
+\[
+  \text{PercReqKept}^{(i)} = \frac{|R_k^{(i)}|}{|R_k^{(i)}| + 1}
+\]
+which grows toward 100\% as more requirements are incorporated, and is always strictly higher than the PercReqKept achievable by processing the same requirements in a single batch. By construction, each individual solver call thus operates on the smallest possible incremental problem.
+
+Concretely, the process unfolds as a chain of reconfiguration steps. The network starts from an existing valid configuration. One new requirement is then selected and handed to React-VEREFOO, which updates the configuration to accommodate it. The result, the new allocation scheme and updated filtering rules becomes the starting point for the next step. Another requirement is then introduced, the process repeats, and so on until every new requirement has been incorporated. At no point is the full set of new requirements processed at once; the tool always sees exactly one addition on top of an otherwise stable configuration.
+
+Formally, let $P_0$ denote the initial set of requirements already enforced in the network and $\{A_1, A_2, A_3, \ldots\}$ the ordered sequence of new NSRs to be introduced. The chain of React-VEREFOO invocations is:
 
 \begin{enumerate}
-  \item initial: $P_0$, additional: $\{A\}$
-  \item initial: $\{P_0, A\}$, additional: $\{B\}$
-  \item initial: $\{P_0, A, B\}$, additional: $\{C\}$
+  \item initial: $P_0$,\quad additional: $\{A_1\}$
+  \item initial: $\{P_0, A_1\}$,\quad additional: $\{A_2\}$
+  \item initial: $\{P_0, A_1, A_2\}$,\quad additional: $\{A_3\}$
   \item \ldots
 \end{enumerate}
 
-Since each invocation of React-VEREFOO deals with exactly one added requirement, the portion of the network that must be reconsidered at each step is minimised by construction. This keeps each individual MaxSMT subproblem small, regardless of the total number of NSRs, with the expectation of reducing overall computation time. The number of iteration steps is equal to the number of new NSRs, which is a linear factor, but the reduced complexity of each step is expected to more than compensate for that.
+The total number of solver invocations equals the number of new NSRs — a linear cost — but each individual invocation is far cheaper than a single reconfiguration over the full batch, since the solver always operates considering one new requirement only. Whether the cumulative saving per step outweighs the cost of repeating the process $n$ times is the central empirical question addressed in Chapter~\ref{chap:implementation}.
 
 % todo: add figure showing the iterative approach, with a sequence of iterations and the current configuration being passed to the next iteration
+
+\section{Expected Benefits and Trade-offs}
+
+The proposed approach is expected to yield consistent performance improvements over both vanilla VEREFOO and standard React-VEREFOO, at the cost of some trade-offs that are important to acknowledge.
+
+\paragraph{Expected benefits.} Because each invocation of React-VEREFOO sees a problem with exactly one new requirement, the solver is always operating on the smallest possible incremental problem. This is in contrast to standard React-VEREFOO, which can receive an arbitrarily large batch of new NSRs and whose efficiency degrades as the batch grows. The proposed iterative approach removes this dependency on batch size: regardless of how many NSRs must be processed in total, each individual solver call remains minimal.
+
+\paragraph{Trade-offs.} The main cost of the approach is the linear number of solver invocations: where vanilla VEREFOO solves one problem and React-VEREFOO solves one (possibly large) problem, the iterative variant solves $n$ small problems. Each invocation carries a fixed overhead — parsing, constraint encoding, and solver initialization — which accumulates over the $n$ iterations. Whether the per-step gain in solver efficiency outweighs this overhead is ultimately an empirical question, and one that the experimental evaluation in Chapter~\ref{chap:implementation} is designed to answer.
+
+% ? to confirm that no guarantee on gloabl optimal can be given 
+A second trade-off concerns the quality of the final configuration. Vanilla VEREFOO optimises globally over the full NSR set, producing a configuration that minimises the total number of firewalls and rules jointly. The proposed iterative approach, by contrast, optimises locally at each step. In particular, a firewall placed during the first iteration to satisfy the first new NSR (defined as $A_1$ in previous example) may not be the best structural choice once the subsequent new requirements ($A_2, \ldots, A_n$) are taken into account in the following iterartions. This potential loss of global optimality is a known limitation of any greedy sequential strategy.
+
+% \section{Research Questions}
+
+% The experimental evaluation conducted in this thesis is guided by two main research questions:
+
+% \begin{enumerate}
+%   \item \textbf{Performance}: Does the iterative approach reduce total execution time compared to vanilla VEREFOO, and under what conditions? Is the per-step speedup sufficient to compensate for the overhead of $n$ separate solver invocations?
+%   \item \textbf{Configuration quality}: Does the final configuration produced by the iterative approach differ in quality from that produced by vanilla VEREFOO, in terms of number of allocated firewalls and number of generated filtering rules?
+% \end{enumerate}
+
+% \section{Scope}
+
+% ? to check if this applies
+The approach investigated in this thesis focuses exclusively on the addition of new NSRs. The case of NSR removal is not considered: when a requirement must be revoked, the iterative strategy described here does not apply, and a separate reconfiguration procedure would be needed. Similarly, the thesis considers only the whitelisting and blacklisting policy modes supported by React-VEREFOO, and the evaluation is conducted on three specific benchmark topologies. Generalisation to other policy modes or network types is left as future work.
 

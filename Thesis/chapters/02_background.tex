@@ -93,14 +93,38 @@ VEREFOO has been validated on both synthetic and real-world network topologies, 
 
 Despite these strengths, VEREFOO's monolithic approach has a fundamental scalability limitation: the entire set of NSRs and the full network topology are encoded into a single MaxSMT problem. As the number of requirements or the size of the network grows, the complexity of the problem increases significantly, leading to prohibitive computation times. This limitation motivates the development of more efficient alternatives, starting with React-VEREFOO.
 
-% todo: add sentence like: "furhter details on the VEREFOO approach and its validation can be found in Chapter~\ref{chap:implementation_validation}." 
+Further details on the experimental validation of VEREFOO and its comparison with the iterative approach proposed in this thesis can be found in Chapter~\ref{chap:implementation}.
 
 \section{React-VEREFOO}
 
 In operational environments, network security policies are not static: NSRs evolve over time as new services are deployed, topology changes occur, or threat models are updated~\cite{autonomous}. A fundamental limitation of the monolithic approach used by VEREFOO is that any change to the NSR set triggers a full recomputation of the firewall configuration from scratch. React-VEREFOO addresses this by offering a more efficient approach in the dynamic context described above, avoiding the need to discard a valid existing configuration when only a small portion of the requirements has changed~\cite{reactverefoo}.
 
-React-VEREFOO takes as input both the existing firewall configuration and the updated set of security requirements, and computes only the minimal changes needed to bring the network into compliance. Rather than reconsidering the entire problem, it identifies which requirements are new, which have been removed, and which remain unchanged. Only the newly added requirements drive the reconfiguration: the approach determines which parts of the network are affected and restricts the solver to those areas, leaving the rest of the configuration untouched. The result is an updated firewall allocation and rule set that satisfies all current requirements, with the same guarantees of correctness and optimality as VEREFOO.
+React-VEREFOO takes two inputs: the existing firewall configuration (allocation scheme and filtering rules) and a pair of NSR sets — the \textit{initial set} $R_i$, describing the requirements already enforced by the current configuration, and the \textit{target set} $R_t$, describing the requirements that must be enforced after reconfiguration. The approach proceeds in three steps~\cite{reactverefoo}.
 
-Experimental results show that React-VEREFOO is significantly more efficient than vanilla VEREFOO when the proportion of modified NSRs is small, as the reduced problem size leads to much shorter solving times. However, when a large fraction of the requirements changes, the benefits is reduced and React-VEREFOO's performance becomes comparable to that of the monolithic approach. This observation motivates the approach investigated in this thesis: by pushing the incremental logic to its extreme - introducing only one new NSR per iteration - the proportion of modified requirements is always minimised, potentially achieving consistent speedups regardless of the total number of requirements.
+\paragraph{Step 1 — NSR classification.} React-VEREFOO partitions every NSR in $R_i \cup R_t$ into one of three groups:
+\begin{itemize}
+  \item $R_d = \{r \in R_i \mid r \notin R_t\}$: \textit{deleted} requirements, previously enforced but no longer needed. They are simply excluded from the new problem formulation.
+  \item $R_a = \{r \in R_t \mid r \notin R_i\}$: \textit{added} requirements, new NSRs that must be enforced but are not yet satisfied. These are the sole driver of reconfiguration.
+  \item $R_k = \{r \in R_t \mid r \in R_i\}$: \textit{kept} requirements, already correctly enforced and still valid. The nodes satisfying them are left unchanged.
+\end{itemize}
 
-% todo: add illustration of React-VEREFOO approach; showing the difference between VEREFOO Vanilla
+\paragraph{Step 2 — Identification of the network area to reconfigure.} For each added requirement in $R_a$, React-VEREFOO analyses the Allocation Graph to determine which nodes are in conflict with the new requirement and therefore need to be reconsidered. The procedure differs depending on whether the added requirement is an isolation or a reachability constraint~\cite{reactverefoo}.
+
+For an added \textit{isolation} requirement (traffic that must be blocked), the algorithm examines all atomic flows associated with that requirement. If a flow is already blocked by an allocated firewall, no action is needed for that flow. If instead no node along the path currently blocks the traffic, all nodes on that path are flagged as eligible for reconfiguration, since one of them must be configured to enforce the isolation.
+
+For an added \textit{reachability} requirement (traffic that must be allowed end-to-end), the algorithm checks whether at least one atomic flow reaches the destination without being blocked. If such a flow already exists, the requirement is already satisfied and no reconfiguration is needed. Otherwise, the nodes that are currently blocking the traffic are flagged as eligible for reconfiguration.
+
+% todo: add figure explaining step 2 for both cases (isolation and reachability)
+
+In both cases, the algorithm selects all nodes that \textit{could potentially} be used to fulfill the new requirement, since the optimal choice among them is left to the solver. Nodes not flagged by any added requirement retain their current configuration and are excluded from the decision variables of the subsequent MaxSMT problem.
+
+\paragraph{Step 3 — MaxSMT problem formulation and solving.} Once the reconfigurable area has been identified, React-VEREFOO formulates a MaxSMT problem. This problem models traffic flows for all NSRs in the target set, ensuring that the final configuration is correct with respect to all requirements. However, only the flagged nodes appear as free decision variables; the configuration of all other nodes is treated as fixed. This restriction dramatically reduces the size of the search space compared to a full recomputation~\cite{reactverefoo}.
+
+The soft constraints are also adjusted to bias the solver toward reusing the existing configuration: allocating an already-deployed firewall is preferred over placing a new one, and retaining an existing rule is preferred over generating a new one. This minimises the number of changes applied to the network, reducing the time needed to deploy the new configuration.
+
+The result is an updated allocation scheme and a revised set of filtering policies that satisfy all requirements in the target set, with formal correctness guaranteed by construction. As with VEREFOO, the output may not be globally optimal, since only a subset of the network is reconsidered, but it is optimal within the identified reconfiguration area.
+
+% todo: add illustration of React-VEREFOO approach; 
+% todo: add illustration showing the difference between VEREFOO Vanilla in terms of time of execution
+
+Experimental results confirm that React-VEREFOO is significantly more efficient than vanilla VEREFOO when the proportion of modified NSRs is small, as the reduced problem size leads to much shorter solving times. However, when a large fraction of the requirements changes, the benefit diminishes and performance converges toward the monolithic baseline. This observation motivates the approach investigated in this thesis: by pushing the incremental logic to its extreme and introducing only one new NSR per iteration. The proportion of modified requirements is always minimised, potentially achieving consistent speedups regardless of the total number of requirements.
