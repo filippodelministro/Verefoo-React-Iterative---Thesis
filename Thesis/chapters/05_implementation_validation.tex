@@ -11,7 +11,7 @@
 
 \section{Testing}
 
-\subsection{Test Presentation}
+\subsection{Test Overview}
 % - Obiettivo: confrontare tempo di esecuzione di React-VEREFOO iterativo vs VEREFOO vanilla
 % - Dataset utilizzati:
 %   - Stanford network: topologia reale di rete universitaria
@@ -19,6 +19,21 @@
 %   - CESNET: topologia reale di rete accademica europea
 % - Metrica principale: tempo di esecuzione totale
 % - Metriche secondarie: numero di firewall allocati, numero di regole generate (ottimalità)
+
+The experimental evaluation aims to assess the performance of the iterative approach against vanilla VEREFOO across different network topologies and NSR set sizes. The primary metric is total execution time: the cumulative time required to reach a final valid configuration, including all intermediate React-VEREFOO invocations. Secondary metrics include the number of firewall instances allocated and the number of filtering rules generated, which together quantify any loss of global optimality introduced by the greedy sequential strategy. Each test case was repeated over 20 runs, and the reported values represent the average over those runs.
+
+Three benchmark topologies are used, chosen to cover a spectrum from small real-world networks to large synthetic ones.
+
+\paragraph{Stanford (Configuration 2).}
+The Stanford topology is derived from the publicly available routing and forwarding configuration of the Stanford university backbone network~\cite{atomizing}. Configuration~2 is characterised by port-specific rules being disabled (\texttt{PortSpecifics = 0.00}), which simplifies the underlying MaxSMT problem and represents a best-case scenario for vanilla VEREFOO. NSRs are generated with a reachability ratio of 50\% and no complete reachability constraints (\texttt{percentPairs = \{0.5, 0.0\}}). The number of NSRs ranges from 10 to 60 in increments of 10.
+
+\paragraph{CESNET.}
+CESNET is the real network topology of the Czech national research and education network, a large-scale academic infrastructure serving universities and research institutions across the Czech Republic. In the test configuration, isolation requirements are not bidirectional and port-level constraints are disabled. The total number of NSRs is derived from a policy count and a reachability percentage: $\text{NSR} = \text{policyNumber} + \text{policyNumber} \times \text{reachabilityPerc}$, with a reachability percentage of approximately 50\%. The tested NSR counts range from 20 to 120.
+
+\paragraph{Texas 2000.}
+Texas~2000 is a large-scale synthetic power grid topology, originally developed as a benchmark for network planning studies. It provides a significantly larger and more complex graph than the other two topologies, making it suitable for evaluating scalability under heavy load. NSRs are generated from pairs of user-client-cluster and server-set counts \texttt{(UCC, SS)}, covering test cases from \texttt{(1, 3)} to \texttt{(6, 18)}, corresponding to NSR counts ranging from 48 to 288. Isolation requirements are enabled and port-level constraints are disabled.
+
+
 
 \subsection{Test Configurations}
 % - Variabili testate: dimensione della rete, numero di NSR, ordine degli NSR
@@ -31,20 +46,12 @@
 % - Andamento al crescere del numero di NSR
 % - Andamento al crescere della dimensione della rete
 
+
+
+
+% todo: aggiungere grafico con andamento dei tempi di esecuzione al crescere del numero di NSR
 Figure~\ref{fig:results_comparison} reports the average execution times measured across the three benchmark topologies. Each data point represents the mean over 20 runs. The Y-axis uses a logarithmic scale to accommodate the wide range of values observed, particularly for larger networks.
 
-\begin{figure}[htbp]
-    \centering
-    \includegraphics[width=\textwidth]{images/results_comparison.pdf}
-    \caption{Execution time comparison between React-Iterative VEREFOO and Vanilla VEREFOO across three benchmark topologies.}
-    \label{fig:results_comparison}
-\end{figure}
-
-% On the \textbf{Stanford} network with Configuration 2 (Figure~\ref{fig:results_comparison}a), where port-specific rules are disabled (\texttt{PortSpecifics = 0.00}), Vanilla VEREFOO achieves shorter execution times than React-Iterative across all tested NSR counts. This is expected: when the underlying MaxSMT problem is structurally simple, the overhead introduced by the iterative loop outweighs any per-iteration gain.
-
-% On \textbf{CESNET} (Figure~\ref{fig:results_comparison}b), only React-Iterative results are available. The execution time grows approximately linearly with the number of NSRs, remaining below 2.1 seconds even at 120 NSRs, suggesting the approach scales well on this topology.
-
-% On the \textbf{Texas 2000} topology (Figure~\ref{fig:results_comparison}c), both approaches show an increasing trend as the number of NSRs grows, but the gap between them widens significantly at larger scales. React-Iterative consistently requires more time than Vanilla VEREFOO, with the difference becoming more pronounced beyond 144 NSRs.
 
 \subsection{Comparison and Discussion}
 % - Iterativo vs monolitico: quando l'approccio iterativo è più veloce?
