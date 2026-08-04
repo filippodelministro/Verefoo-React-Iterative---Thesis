@@ -23,12 +23,12 @@ public class TestPerformanceScalabilityCesnet {
 
     public static void main(String[] args) {
         String fileName = "testfile/CESNET/cesnet1";
-        Boolean isolationBidirectional = true;
-        Boolean usePorts = true;
-        int policyNumber = 3;
-        Double reachabilityPerc = 0.05;
+        Boolean isolationBidirectional = false;
+        Boolean usePorts = false;
+        int policyNumber = 10;
+        Double reachabilityPerc = 0.5;
         
-		for (int i = 0; i < 30; i++) {
+		for (int i = 0; i < 20; i++) {
 			try {
                 TestCaseGeneratorCesnet cesnet = new TestCaseGeneratorCesnet(fileName, isolationBidirectional, policyNumber, reachabilityPerc, usePorts);
 

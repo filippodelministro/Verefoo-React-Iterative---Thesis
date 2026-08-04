@@ -3,11 +3,13 @@
 \section{Implementation}
 % - File modificati in React-VEREFOO:
     % - serializer
-    % - 
+    % -
 % - Gestione delle properties tra iterazioni
 % - Struttura del loop iterativo
 % - Come viene passato lo stato (configurazione) da un'iterazione alla successiva
-% TODO: completare con i dettagli specifici dell'implementazione
+% todo: completare con i dettagli specifici dell'implementazione
+
+
 
 \section{Testing}
 
@@ -20,26 +22,66 @@
 % - Metrica principale: tempo di esecuzione totale
 % - Metriche secondarie: numero di firewall allocati, numero di regole generate (ottimalità)
 
-The experimental evaluation aims to assess the performance of the iterative approach against vanilla VEREFOO across different network topologies and NSR set sizes. The primary metric is total execution time: the cumulative time required to reach a final valid configuration, including all intermediate React-VEREFOO invocations. Secondary metrics include the number of firewall instances allocated and the number of filtering rules generated, which together quantify any loss of global optimality introduced by the greedy sequential strategy. Each test case was repeated over 20 runs, and the reported values represent the average over those runs.
+The experimental evaluation aims to assess the performance of the iterative approach against vanilla VEREFOO across different network topologies and NSR set sizes. The metric used is total execution time: the cumulative time required to reach a final valid configuration, including all intermediate React-VEREFOO invocations. Each test case was repeated over 20 runs, and the reported values represent the average over those runs.
+
+% ? capire se aggiungere o meno
+Evaluating additional metrics, such as the number of allocated firewall instances and the number of generated filtering rules, which would quantify any loss of global optimality introduced by the greedy sequential strategy, is left as a direction for future work.
 
 Three benchmark topologies are used, chosen to cover a spectrum from small real-world networks to large synthetic ones.
 
-\paragraph{Stanford (Configuration 2).}
-The Stanford topology is derived from the publicly available routing and forwarding configuration of the Stanford university backbone network~\cite{atomizing}. Configuration~2 is characterised by port-specific rules being disabled (\texttt{PortSpecifics = 0.00}), which simplifies the underlying MaxSMT problem and represents a best-case scenario for vanilla VEREFOO. NSRs are generated with a reachability ratio of 50\% and no complete reachability constraints (\texttt{percentPairs = \{0.5, 0.0\}}). The number of NSRs ranges from 10 to 60 in increments of 10.
+\paragraph{Stanford.}
+% todo: add description of Stanford
 
 \paragraph{CESNET.}
-CESNET is the real network topology of the Czech national research and education network, a large-scale academic infrastructure serving universities and research institutions across the Czech Republic. In the test configuration, isolation requirements are not bidirectional and port-level constraints are disabled. The total number of NSRs is derived from a policy count and a reachability percentage: $\text{NSR} = \text{policyNumber} + \text{policyNumber} \times \text{reachabilityPerc}$, with a reachability percentage of approximately 50\%. The tested NSR counts range from 20 to 120.
+% todo: add description of CESNET
 
 \paragraph{Texas 2000.}
-Texas~2000 is a large-scale synthetic power grid topology, originally developed as a benchmark for network planning studies. It provides a significantly larger and more complex graph than the other two topologies, making it suitable for evaluating scalability under heavy load. NSRs are generated from pairs of user-client-cluster and server-set counts \texttt{(UCC, SS)}, covering test cases from \texttt{(1, 3)} to \texttt{(6, 18)}, corresponding to NSR counts ranging from 48 to 288. Isolation requirements are enabled and port-level constraints are disabled.
-
+% todo: add description of Texas 2000
 
 
 \subsection{Test Configurations}
 % - Variabili testate: dimensione della rete, numero di NSR, ordine degli NSR
 % - Configurazioni hardware/software utilizzate per i test
 % - Numero di ripetizioni per test, metodo di calcolo della media
-% TODO: aggiungere dettagli specifici delle configurazioni
+% ?: controllare dettagli specifici delle configurazioni
+
+All three test classes invoke \texttt{VerefooSerializer} with the \texttt{react = true} flag and the Atomic Predicates (\texttt{AP}) algorithm. The vanilla baseline is obtained by invoking the single-argument constructor on the same input, without the iterative loop. The configurations differ in how the network topology and NSR set are generated.
+
+\paragraph{Stanford.}
+% todo: check value after final version of tests
+NSRs are generated synthetically on top of the Stanford topology using \texttt{TestCaseGeneratorStanford}. The test is parameterised by three values: the number of properties (\texttt{numberPRs}), the ratio of reachability and isolation requirements (\texttt{percentPairs}), and the fraction of port-specific rules (\texttt{portSpecifics}). In this thesis, \texttt{percentPairs} and \texttt{portSpecifics} are held constant at \texttt{\{0.5, 0.0\}} and \texttt{0.00} respectively across all test cases, while \texttt{numberPRs} varies over \{10, 20, 30, 40, 50, 60\}, producing six distinct NSR set sizes. Each configuration is executed 20 times, and the reported values are the averages over those runs.
+
+\paragraph{CESNET.}
+% todo: check value after final version of tests
+The CESNET topology is loaded via the \texttt{TestCaseGeneratorCesnet}. Unlike Stanford, the topology itself is fixed and only the NSR set varies across test cases. Isolation requirements are not bidirectional (\texttt{isolationBidirectional = false}) and port-level constraints are disabled (\texttt{usePorts = false}). The number of NSRs is increased progressively across test runs by raising \texttt{policyNumber}, with \texttt{reachabilityPerc = 0.5}, so that approximately half of the generated NSRs are reachability properties and the other half are isolation properties. Each configuration is executed 20 times.
+
+\paragraph{Texas 2000.}
+% todo: check value after final version of tests
+For the Texas~2000 topology, both the network graph and the NSR set are generated synthetically by \texttt{TestCaseGeneratorTexas2000}. The topology size is controlled by two parameters: \texttt{numberUCC} (???) and \texttt{numberSS} (???). The test iterates over six predefined \texttt{(UCC, SS)} pairs — \texttt{(1,3)}, \texttt{(2,6)}, \texttt{(3,9)}, \texttt{(4,12)}, \texttt{(5,15)}, \texttt{(6,18)} — corresponding to NSR counts of 48, 96, 144, 192, 240, and 288 respectively. The topology size as well as number of NSR is varied to assess its impact on performance. Each configuration is executed 20 times, and the reported values are the averages over those runs.
+
+% todo: to add table with configuration parameters for each test class showing the values used for each parameter
+
+Table~\ref{tab:test-configs} summarises the configuration parameters used in each test class, as read from the source code.
+
+
+% todo: fix width of table
+\begin{table}[htbp]
+\centering
+\caption{Configuration parameters for each benchmark test class (values from source code).}
+\label{tab:test-configs}
+\begin{tabular}{llll}
+\hline
+\textbf{Parameter} & \textbf{Stanford} & \textbf{CESNET} & \textbf{Texas 2000} \\
+\hline
+Algorithm & AP & AP & AP \\
+Runs per config & 20 & 20 & 20 \\
+\texttt{percentPairs} / \texttt{reachabilityPerc} & \texttt{\{0.5, 0.0\}} & \texttt{0.5} & — \\
+\texttt{portSpecifics} / \texttt{usePorts} & \texttt{0.00} & \texttt{false} & \texttt{false} \\
+\texttt{isolationBound} & — & — & \texttt{30} \\
+NSR set sizes & 10, 20, 30, 40, 50, 60 & 20, 40, 60, 80, 100, 120 & 48, 96, 144, 192, 240, 288 \\
+\hline
+\end{tabular}
+\end{table}
 
 \subsection{Results}
 % - Tabelle/grafici dei tempi di esecuzione per ogni dataset
