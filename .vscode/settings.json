@@ -14,5 +14,8 @@
         }
     ],
     "latex-workshop.latex.autoBuild.run": "onSave",
-    "latex-workshop.view.pdf.viewer": "tab"
+    "latex-workshop.view.pdf.viewer": "tab",
+    "search.exclude": {
+        "code": true
+    }
 }

@@ -57,6 +57,9 @@ VEREFOO (VErification REasoning on Firewall Optimization) is a tool designed to 
 
 The tool provides three formal guarantees. \textit{Automation} ensures that no human intervention is required at any stage of the process. \textit{Formal correctness} guarantees that the generated configuration satisfies all specified NSRs by construction, eliminating the risk of undetected misconfigurations. \textit{Optimality} ensures that both the number of allocated firewall instances and the number of generated rules are minimised, reducing resource consumption and improving performance. These properties are achieved by encoding the firewall allocation and configuration problem as a partial weighted Maximum Satisfiability Modulo Theories (MaxSMT) instance, which is then solved using the Z3 SMT solver. The hard constraints of the problem encode the correctness requirements, while the soft constraints encode the optimality objectives; the solver finds a solution that satisfies all hard constraints and maximises the sum of satisfied soft constraint weights.
 
+Before the MaxSMT problem is formulated, VEREFOO must compute the set of traffic flows to be modelled. Two algorithms are available for this step. The \textit{Maximal Flows} algorithm (MF) groups packets into maximal flows — flows that are not subflows of any other flow — so that multiple packets with identical traversal behaviour are represented by a single entity, reducing the number of constraints in the problem. The \textit{Atomic Predicates} algorithm (AP) goes further: it decomposes every traffic predicate into a set of atomic predicates that are minimal, unique, and mutually disjoint, then expresses each flow in terms of these atomic predicates. This additional decomposition reduces the number of distinct cases the solver must consider and has been shown to provide better performance for automatic (re)configuration problems. For this reason, all experiments in this thesis use the AP algorithm.
+
+% todo: add illustration to show the difference between MF and AP algorithms
 
 \subsection{Network Security Requirements}
 
@@ -86,8 +89,6 @@ Together, these two outputs constitute the full security configuration of the ne
 
 % todo: insert image: allocation graph, with allocation places
 %?: Verefoo non ragiona su singoli pacchetti, ma su flussi di traffico %todo => spiegare benefici
-
-% todo: understand where to put AP and MF algorithms, and to describe them; specify why for this theisis only AP was used
 
 \subsection{Verefoo validation}
 
