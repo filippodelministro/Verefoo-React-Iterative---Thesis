@@ -6,34 +6,31 @@ Network security is a critical concern for virtually every organization, from sm
 
 Modern enterprise networks are characterized by growing complexity: hundreds of interconnected nodes, heterogeneous services, and security policies that must be consistently enforced across distributed infrastructure. Moreover, network topologies are not static: new services are deployed, nodes are added or removed, and connectivity requirements evolve continuously, making security management an ongoing and demanding task. The cost of managing network security in this context is significant, as it requires specialized expertise, advanced planning, and constant monitoring~\cite{automation-survey}.
 
-A central challenge in this landscape stems from the evolution of network security architectures. Traditionally, a single perimeter firewall was sufficient to protect a network by controlling traffic at its boundary. However, as networks grew in scale and complexity, this model proved inadequate: a single point of control cannot enforce fine-grained policies across a heterogeneous internal topology. Modern networks have therefore evolved toward microsegmentation, deploying multiple packet-filtering firewall instances strategically distributed across the topology to enforce security policies at a much more granular level~\cite{novel-abstraction}. This distributed approach offers clear advantages such as enabling finer-grained traffic control, reduces single points of failure, and allows security policies to be enforced closer to the traffic sources, but it also introduces considerable management complexity. Each firewall instance must be individually configured with a set of filtering rules, and those rules must collectively enforce the intended security policy across the entire network, without conflicts or gaps.
+A central challenge in this landscape stems from the evolution of network security architectures. Traditionally, a single perimeter firewall was sufficient to protect a network by controlling traffic at its boundary. However, as networks grew in scale and complexity, this model proved inadequate: a single point of control cannot enforce fine-grained policies across a heterogeneous internal topology. Modern networks have therefore evolved toward microsegmentation, deploying multiple packet-filtering firewall instances strategically distributed across the topology to enforce security policies at a much more granular level~\cite{novel-abstraction}, as illustrated in Figure~\ref{fig:fw-architectures}. This distributed approach offers clear advantages such as enabling finer-grained traffic control, reduces single points of failure, and allows security policies to be enforced closer to the traffic sources, but it also introduces considerable management complexity. Each firewall instance must be individually configured with a set of filtering rules, and those rules must collectively enforce the intended security policy across the entire network, without conflicts or gaps.
 
-In this context, the configuration of firewalls becomes a critical task. On one hand, overly permissive rules may allow unauthorized traffic to reach sensitive resources, exposing the network to attacks. On the other hand, overly restrictive rules may block legitimate traffic, degrading service availability and causing operational disruptions. Both failure modes carry significant consequences, and yet both are common outcomes of manual configuration process which is inherently prone to errors especially for large-scale networks~\cite{atomizing}.
-
-The gap between the complexity of modern networks and the limitations of manual security management calls for automated approaches that can generate correct and optimal firewall configurations without human intervention. It is in this context that VEREFOO was developed: a tool for the automated, formally correct allocation and configuration of distributed firewalls, designed to bridge exactly this gap.
-
-% todo: Rifare gli schemi di:
-% - perimetral firewall architecture
-% - distributed firewall architecture
-
-\begin{figure}[htbp]
+\begin{figure}[H]
     \centering
     \begin{minipage}[t]{0.48\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/Perimetral-FW.jpg}
-        \subcaption{Traditional perimeter firewall architecture.}
+        \includegraphics[width=\textwidth]{images/perimeter-firewall-architecture.png}
+        \subcaption{Traditional perimeter firewall architecture. A single point of control at the network boundary; internal traffic is unfiltered.}
         \label{fig:perimetral-fw}
     \end{minipage}
     \hfill
     \begin{minipage}[t]{0.48\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{images/Distributed-FW-white.jpg}
-        \subcaption{Distributed firewall architecture (microsegmentation).}
+        \includegraphics[width=\textwidth]{images/distributed-firewall-architecture.png}
+        \subcaption{Distributed firewall architecture (microsegmentation). A filtering instance guards each segment, so internal traffic is filtered as well.}
         \label{fig:distributed-fw}
     \end{minipage}
     \caption{Evolution of network security architectures: from a single perimeter firewall to distributed packet-filtering instances deployed across the topology.}
     \label{fig:fw-architectures}
 \end{figure}
+
+In this context, the configuration of firewalls becomes a critical task. On one hand, overly permissive rules may allow unauthorized traffic to reach sensitive resources, exposing the network to attacks. On the other hand, overly restrictive rules may block legitimate traffic, degrading service availability and causing operational disruptions. Both failure modes carry significant consequences, and yet both are common outcomes of manual configuration process which is inherently prone to errors especially for large-scale networks~\cite{atomizing}.
+
+The gap between the complexity of modern networks and the limitations of manual security management calls for automated approaches that can generate correct and optimal firewall configurations without human intervention. It is in this context that VEREFOO was developed: a tool for the automated, formally correct allocation and configuration of distributed firewalls, designed to bridge exactly this gap.
+
 
 \section{VEREFOO}
 
@@ -51,15 +48,21 @@ The gap between the complexity of modern networks and the limitations of manual 
 % - Verefoo é stato testato su reti reali e sintetiche (Stanford e CESNET) dimostrando affidabilitá e scalabilitá
 % - Limite: approccio monolitico  $\rightarrow$  non scala al crescere della rete o degli NSR
 
-VEREFOO (VErification REasoning on Firewall Optimization) is a tool designed to automate the allocation and configuration of packet-filtering firewalls in a network, eliminating the need for manual intervention entirely~\cite{verefoo}. Given a network topology and a set of Network Security Requirements (NSRs) --- high-level specifications describing which traffic flows must be allowed or denied between network endpoints~\cite{twofold} --- VEREFOO automatically determines where firewalls should be placed within the topology and generates the corresponding filtering rules for each allocated instance. The resulting configuration is expressed in a vendor-independent format, which can then be translated into concrete rules for specific implementations such as iptables, BPF, or OVS.
-
-% todo: add a figure illustrating the input and output of VEREFOO, showing a network topology with NSRs as input and the resulting firewall allocation and rule sets as output
+VEREFOO (VErification REasoning on Firewall Optimization) is a tool designed to automate the allocation and configuration of packet-filtering firewalls in a network, eliminating the need for manual intervention entirely~\cite{verefoo}. As shown in Figure~\ref{fig:verefoo-inputs-outputs}, given a network topology and a set of Network Security Requirements (NSRs) --- high-level specifications describing which traffic flows must be allowed or denied between network endpoints~\cite{twofold} --- VEREFOO automatically determines where firewalls should be placed within the topology and generates the corresponding filtering rules for each allocated instance. The resulting configuration is expressed in a vendor-independent format, which can then be translated into concrete rules for specific implementations such as iptables, BPF, or OVS.
 
 The tool provides three formal guarantees. \textit{Automation} ensures that no human intervention is required at any stage of the process. \textit{Formal correctness} guarantees that the generated configuration satisfies all specified NSRs by construction, eliminating the risk of undetected misconfigurations. \textit{Optimality} ensures that both the number of allocated firewall instances and the number of generated rules are minimised, reducing resource consumption and improving performance. These properties are achieved by encoding the firewall allocation and configuration problem as a partial weighted Maximum Satisfiability Modulo Theories (MaxSMT) instance, which is then solved using the Z3 SMT solver. The hard constraints of the problem encode the correctness requirements, while the soft constraints encode the optimality objectives; the solver finds a solution that satisfies all hard constraints and maximises the sum of satisfied soft constraint weights.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{images/verefoo-inputs-outputs.png}
+    \caption{High-level view of VEREFOO: given the Service Graph and the Network Security Requirements, the tool produces the firewall allocation scheme and the filtering policy for each allocated instance guaranteeing formal correctness and optimality.}
+    \label{fig:verefoo-inputs-outputs}
+\end{figure}
 
 Before the MaxSMT problem is formulated, VEREFOO must compute the set of traffic flows to be modelled. Two algorithms are available for this step. The \textit{Maximal Flows} algorithm (MF) groups packets into maximal flows — flows that are not subflows of any other flow — so that multiple packets with identical traversal behaviour are represented by a single entity, reducing the number of constraints in the problem. The \textit{Atomic Predicates} algorithm (AP) goes further: it decomposes every traffic predicate into a set of atomic predicates that are minimal, unique, and mutually disjoint, then expresses each flow in terms of these atomic predicates. This additional decomposition reduces the number of distinct cases the solver must consider and has been shown to provide better performance for automatic (re)configuration problems. For this reason, all experiments in this thesis use the AP algorithm.
 
 % todo: add illustration to show the difference between MF and AP algorithms
+
 
 \subsection{Network Security Requirements}
 
@@ -77,8 +80,7 @@ The SG serves as the structural input to VEREFOO: it defines the space of possib
 
 VEREFOO uses the Allocation Graph (AG) jointly with the Network Security Requirements (NSRs) to formulate the MaxSMT problem. Each AP corresponds to boolean decision variable that the solver uses to determines the optimal firewall placement and what filtering rules each firewall should enforce, such that all NSRs are satisfied and the total number of allocated firewalls and rules is minimised.
 
-% todo: add figures:
-% - service graph without firewall
+% todo: add figures of service graph without firewall
 
 
 \subsection{VEREFOO Output}
