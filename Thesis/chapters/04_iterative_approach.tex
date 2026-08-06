@@ -123,23 +123,8 @@ The network consists of three endpoint nodes: a \textit{Client} (C), a \textit{W
 
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}[
-    node/.style={circle, draw, minimum size=1cm, font=\small},
-    ap/.style={rectangle, draw, dashed, minimum size=0.8cm, font=\scriptsize},
-    >=Stealth
-]
-\node[node] (C) {C};
-\node[ap,  right=1.2cm of C] (AP1) {$\mathit{AP}_1$};
-\node[node, right=1.2cm of AP1] (W) {W};
-\node[ap,  right=1.2cm of W] (AP2) {$\mathit{AP}_2$};
-\node[node, right=1.2cm of AP2] (D) {D};
-
-\draw[<->] (C) -- (AP1);
-\draw[<->] (AP1) -- (W);
-\draw[<->] (W) -- (AP2);
-\draw[<->] (AP2) -- (D);
-\end{tikzpicture}
-\caption{Synthetic topology used in the worked example. Dashed rectangles are Allocation Places; solid circles are endpoints.}
+\includegraphics[width=0.85\textwidth]{images/example-topology.png}
+\caption{Simple example topology. Solid circles represent endpoints; dashed rectangles are Allocation Places.}
 \label{fig:example-topology}
 \end{figure}
 
