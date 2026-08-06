@@ -1,0 +1,99 @@
+\documentclass[a4paper, 12pt]{article}
+
+% ── Packages ──────────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mfirstuc}
+\raggedbottom
+
+\lstset{basicstyle=\ttfamily\small, breaklines=true, frame=single}
+
+\hypersetup{%
+    pdfpagemode={UseOutlines},
+    bookmarksopen,
+    pdfstartview={FitH},
+    colorlinks,
+    linkcolor={blue},
+    citecolor={red},
+    urlcolor={blue}
+}
+
+% ── Thesis metadata ───────────────────────────────────────────────────────────
+\newcommand{\thesistitle}{An incremental approach to automatic firewall configuration}
+\newcommand{\thesiscandidatename}{Filippo}
+\newcommand{\thesiscandidatesurname}{Del Ministro}
+\newcommand{\thesiscourse}{Cybersecurity}
+\newcommand{\thesisfield}{Department of Control and Computer Engineering}
+\newcommand{\thesislevel}{Master}
+\newcommand{\thesisuniversity}{Politecnico di Torino}
+\newcommand{\thesissupervisors}{%
+    Prof.\ Fulvio Valenza\\
+    Prof.\ Daniele Bringhenti\\
+    Prof.\ Francesco Pizzato%
+}
+
+% ── Section formatting: no numbers ───────────────────────────────────────────
+\setcounter{secnumdepth}{0}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{document}
+
+% ── Header ───────────────────────────────────────────────────────────────────
+\noindent
+\begin{minipage}[c]{0.30\textwidth}
+    \includegraphics[width=\linewidth]{logopolito.pdf}
+\end{minipage}%
+\hfill
+\begin{minipage}[c]{0.65\textwidth}\raggedleft
+    \thesislevel's Degree Course in \textbf{\thesiscourse}\\
+    \textit{\thesisfield}
+\end{minipage}
+
+\vspace{0.5cm}
+
+\begin{center}
+    {\large\textbf{\thesistitle}}
+\end{center}
+
+\noindent
+\begin{minipage}[t]{0.55\textwidth}
+    \small
+    \textbf{Supervisors}\\
+    \thesissupervisors
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.40\textwidth}\raggedleft
+    \small
+    \textbf{Candidate}\\
+    \thesiscandidatename~\textsc{\thesiscandidatesurname}
+\end{minipage}
+
+\vspace{0.5cm}
+\begin{center}
+    {\large\textbf{Executive Summary}}
+\end{center}
+\noindent\hrule
+\vspace{0.6cm}
+
+% ── Content ──────────────────────────────────────────────────────────────────
+\input{chapters/es_content.tex}
+
+% ── Bibliography ─────────────────────────────────────────────────────────────
+\bibliographystyle{ieeetr}
+\bibliography{biblio}
+
+\end{document}

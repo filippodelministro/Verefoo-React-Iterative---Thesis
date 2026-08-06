@@ -1,0 +1,14 @@
+% !TEX root = ../tesi.tex
+
+
+Modern enterprise networks are complex, distributed systems in which security policy enforcement is a critical and continuous operational challenge. As topologies grow in scale and heterogeneity, the manual configuration of packet-filtering firewalls becomes increasingly error-prone. Misconfigurations can expose sensitive resources or degrade service availability. The shift toward microsegmentation, distributing enforcement across multiple firewall instances throughout the network, improves security granularity but amplifies the management effort. Automated tools that generate formally correct and optimal configurations are therefore essential.
+
+VEREFOO (VErification REasoning on Firewall Optimization) addresses this need by automatically computing firewall allocation and configuration from a network topology and a set of Network Security Requirements (NSRs). It encodes the problem as a Maximum Satisfiability Modulo Theories (MaxSMT) instance solved by the Z3 solver, guaranteeing formal correctness and minimality of the result. However, VEREFOO follows a monolithic approach: every time the NSR set changes, the entire problem is re-encoded and solved from scratch, scaling poorly as the network or requirement set grows.
+
+React-VEREFOO addresses this by taking an incremental approach. It identifies which requirements are new, removed, or unchanged, and restricts the solver to only the affected parts of the network. This reduces reconfiguration cost when few requirements change, but the benefit diminishes when a large fraction of the NSR set is modified simultaneously.
+
+This thesis pushes the incremental principle to its extreme. The proposed Iterative React-VEREFOO introduces new NSRs one at a time: at each step, the current configuration is used as the starting state and exactly one requirement is added. React-VEREFOO computes the minimal update, and the result becomes the input to the next iteration. By construction, the reconsidered portion of the network is always minimal, keeping each MaxSMT subproblem small regardless of the total number of requirements.
+
+% ── Conclusions (1/5) ────────────────────────────────────────────────────────
+
+% todo:TO WRITE CONCLUSIONS!!
