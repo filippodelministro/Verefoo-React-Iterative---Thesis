@@ -16,17 +16,18 @@ Only the added requirements $R_a$ drive the reconfiguration: React-VEREFOO ident
 
 The key performance parameter is the proportion of kept requirements, which can be defined as:
 \[
-  \text{PercReqKept} = \frac{|R_k|}{|R_k| + |R_a| + |R_d|}
+  \text{PercReqKept} = \frac{R_k}{R_k + R_a + R_d}
 \]
-The higher this ratio, the smaller the added and deleted sets, and consequently the narrower the network area that must be reconsidered. Experimental results in~\cite{reactverefoo} confirm that the approach yields its greatest speedups at high values of PercReqKept (90\% and above), and that performance converges toward the vanilla baseline as PercReqKept decreases. This is consistent with real-world operational patterns: studies of large-scale infrastructure~\cite{reactverefoo} report that the vast majority of configuration updates affect only a small fraction of the total rule set, making high PercReqKept the typical case in practice.
+The higher this ratio, the smaller the added and deleted sets, and consequently the narrower the network area that must be reconsidered. Experimental results in~\cite{reactverefoo} confirm that the approach yields its greatest speedups at high values of PercReqKept, and that performance converges toward the vanilla baseline as PercReqKept decreases. This is consistent with real-world operational patterns: studies of large-scale infrastructure~\cite{reactverefoo} report that the vast majority of configuration updates affect only a small fraction of the total rule set, making high PercReqKept the typical case in practice.
 
 The key idea of this thesis is to push this observation to its logical extreme. Instead of processing all new NSRs in a single reconfiguration step, the proposed approach introduces them \textbf{one at a time}. At each step, only one new requirement is presented to React-VEREFOO as added, while everything enforced so far falls into the kept set. This means the reconfiguration area identified at each step is always the smallest it could possibly be — a single requirement drives each solver call, regardless of how many requirements must ultimately be incorporated. The proportion of kept requirements is therefore always at its theoretical maximum for the given state of the network, and grows larger with every iteration as the kept set expands.
 
-Formally, at each iteration $i$, the current configuration enforces $R_k^{(i)} = R_i \cup \{A_1, \ldots, A_{i-1}\}$ and the single new requirement $A_i$ constitutes the entire added set $R_a^{(i)} = \{A_i\}$. This gives:
-\[
-  \text{PercReqKept}^{(i)} = \frac{|R_k^{(i)}|}{|R_k^{(i)}| + 1}
-\]
-which grows toward 100\% as more requirements are incorporated, and is always strictly higher than the PercReqKept achievable by processing the same requirements in a single batch. By construction, each individual solver call thus operates on the smallest possible incremental problem.
+% todo: restore this once checked
+% Formally, at each iteration $i$, the current configuration enforces $R_k^{(i)} = R_i \cup \{A_1, \ldots, A_{i-1}\}$ and the single new requirement $A_i$ constitutes the entire added set $R_a^{(i)} = \{A_i\}$. This gives:
+% \[
+%   \text{PercReqKept}^{(i)} = \frac{|R_k^{(i)}|}{|R_k^{(i)}| + 1}
+% \]
+% which grows toward 100\% as more requirements are incorporated, and is always strictly higher than the PercReqKept achievable by processing the same requirements in a single batch. By construction, each individual solver call thus operates on the smallest possible incremental problem.
 
 Concretely, the process unfolds as a chain of reconfiguration steps. The network starts from an existing valid configuration. One new requirement is then selected and handed to React-VEREFOO, which updates the configuration to accommodate it. The result, the new allocation scheme and updated filtering rules becomes the starting point for the next step. Another requirement is then introduced, the process repeats, and so on until every new requirement has been incorporated. At no point is the full set of new requirements processed at once; the tool always sees exactly one addition on top of an otherwise stable configuration.
 
