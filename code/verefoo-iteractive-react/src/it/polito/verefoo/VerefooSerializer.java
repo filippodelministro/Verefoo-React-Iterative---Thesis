@@ -162,8 +162,9 @@ public class VerefooSerializer {
 				
 				for (Property currentProp : prop) {
 					// Passing to VerefooProxy only one firstProp	
-					List<Property> singleProp = new ArrayList<>();
+					List<org.glassfish.jersey.internal.util.Property> singleProp = new ArrayList<>();
 					singleProp.add(currentProp);
+					singleProp.addAll(consideredProps);
 					System.out.println("=== CURRENT STATE ===" + "iteration " + ++i);
 
 					// Print consideredProps
