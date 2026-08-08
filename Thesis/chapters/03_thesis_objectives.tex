@@ -50,21 +50,10 @@ The proposed approach is expected to yield consistent performance improvements o
 
 \paragraph{Expected benefits.} Because each invocation of React-VEREFOO sees a problem with exactly one new requirement, the solver is always operating on the smallest possible incremental problem. This is in contrast to standard React-VEREFOO, which can receive an arbitrarily large batch of new NSRs and whose efficiency degrades as the batch grows. The proposed iterative approach removes this dependency on batch size: regardless of how many NSRs must be processed in total, each individual solver call remains minimal.
 
-\paragraph{Trade-offs.} The main cost of the approach is the linear number of solver invocations: where vanilla VEREFOO solves one problem and React-VEREFOO solves one (possibly large) problem, the iterative variant solves $n$ small problems. Each invocation carries a fixed overhead — parsing, constraint encoding, and solver initialization — which accumulates over the $n$ iterations. Whether the per-step gain in solver efficiency outweighs this overhead is ultimately an empirical question, and one that the experimental evaluation in Chapter~\ref{chap:implementation} is designed to answer.
+\paragraph{Trade-offs.} The main cost of the approach is the linear number of solver invocations: where vanilla VEREFOO solves one problem and React-VEREFOO solves one (possibly large) problem, the iterative variant proposed in this thesis   solves $n$ small problems. Each invocation carries a fixed overhead due to parsing, constraint encoding, and solver initialization, which accumulates over the $n$ iterations. Whether solving $n$ small problems is globally faster than solving one large problem, is the central question this thesis aims to address.
 
 % ? to confirm that no guarantee on gloabl optimal can be given 
-A second trade-off concerns the quality of the final configuration. Vanilla VEREFOO optimises globally over the full NSR set, producing a configuration that minimises the total number of firewalls and rules jointly. The proposed iterative approach, by contrast, optimises locally at each step. In particular, a firewall placed during the first iteration to satisfy the first new NSR (defined as $A_1$ in previous example) may not be the best structural choice once the subsequent new requirements ($A_2, \ldots, A_n$) are taken into account in the following iterartions. This potential loss of global optimality is a known limitation of any greedy sequential strategy.
-
-% \section{Research Questions}
-
-% The experimental evaluation conducted in this thesis is guided by two main research questions:
-
-% \begin{enumerate}
-%   \item \textbf{Performance}: Does the iterative approach reduce total execution time compared to vanilla VEREFOO, and under what conditions? Is the per-step speedup sufficient to compensate for the overhead of $n$ separate solver invocations?
-%   \item \textbf{Configuration quality}: Does the final configuration produced by the iterative approach differ in quality from that produced by vanilla VEREFOO, in terms of number of allocated firewalls and number of generated filtering rules?
-% \end{enumerate}
-
-% \section{Scope}
+A second trade-off concerns the quality of the final configuration. Vanilla VEREFOO optimises globally over the full NSR set, producing a configuration that minimises the total number of firewalls and rules jointly. The proposed iterative approach, by contrast, optimises locally at each step. In particular, a firewall placed during the first iteration to satisfy the first new NSR (defined as $A_1$ in previous example) may not be the best structural choice once the subsequent new requirements ($A_2, \ldots, A_n$) are taken into account in the following iterartions. Whether and to what extent this affects the quality of the final configuration in practice remains an open question, and could be the subject of further investigation.
 
 % ? to check if this applies
 The approach investigated in this thesis focuses exclusively on the addition of new NSRs. The case of NSR removal is not considered: when a requirement must be revoked, the iterative strategy described here does not apply, and a separate reconfiguration procedure would be needed. Similarly, the thesis considers only the whitelisting and blacklisting policy modes supported by React-VEREFOO, and the evaluation is conducted on three specific benchmark topologies. Generalisation to other policy modes or network types is left as future work.
