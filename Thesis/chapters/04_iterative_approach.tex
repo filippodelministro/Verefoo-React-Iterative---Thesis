@@ -79,7 +79,7 @@ The iterative approach reuses the same reconfiguration primitive as React-VEREFO
 
 \subsection{Iterative VEREFOO}
 
-The iterative variant modifies the React-VEREFOO approach by introducing NSRs one at a time. The key insight is that at every iteration the solver receives a minimal incremental problem with only one new requirement on top of a stable and already-verified configuration.
+The iterative variant builds on React-VEREFOO as an internal primitive introducing NSRs one at a time. The key insight is that at every iteration the solver receives a minimal incremental problem with only one new requirement on top of a stable and already-verified configuration.
 
 The algorithm maintains two evolving structures across iterations: $\mathit{consideredProps}$, the set of NSRs already enforced and passed as the \textit{initial} set to React-VEREFOO; and $\mathit{currentGraph}$, the network graph as updated by the most recent SAT result. Both are initialised before the loop begins: $\mathit{consideredProps}$ with any pre-existing NSRs (denoted $P_0$), and $\mathit{currentGraph}$ with the original input graph.
 

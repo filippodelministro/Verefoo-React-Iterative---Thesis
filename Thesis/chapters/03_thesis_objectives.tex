@@ -29,9 +29,9 @@ The key idea of this thesis is to push this observation to its logical extreme. 
 % \]
 % which grows toward 100\% as more requirements are incorporated, and is always strictly higher than the PercReqKept achievable by processing the same requirements in a single batch. By construction, each individual solver call thus operates on the smallest possible incremental problem.
 
-Concretely, the process unfolds as a chain of reconfiguration steps. The network starts from an existing valid configuration. One new requirement is then selected and handed to React-VEREFOO, which updates the configuration to accommodate it. The result, the new allocation scheme and updated filtering rules becomes the starting point for the next step. Another requirement is then introduced, the process repeats, and so on until every new requirement has been incorporated. At no point is the full set of new requirements processed at once; the tool always sees exactly one addition on top of an otherwise stable configuration.
+Concretely, the process unfolds as a chain of reconfiguration steps. The network starts from an existing valid configuration. One new requirement is then selected and processed by the iterative system, which internally invokes React-VEREFOO to compute the minimal update to the current configuration. The result, the new allocation scheme and updated filtering rules becomes the starting point for the next step. Another requirement is then introduced, the process repeats, and so on until every new requirement has been incorporated. At no point is the full set of new requirements processed at once; the tool always sees exactly one addition on top of an otherwise stable configuration.
 
-Formally, let $P_0$ denote the initial set of requirements already enforced in the network and $\{A_1, A_2, A_3, \ldots\}$ the ordered sequence of new NSRs to be introduced. The chain of React-VEREFOO invocations is:
+Formally, let $P_0$ denote the initial set of requirements already enforced in the network and $\{A_1, A_2, A_3, \ldots\}$ the ordered sequence of new NSRs to be introduced. The iterative unfolds as the following steps:
 
 \begin{enumerate}
   \item initial: $P_0$,\quad additional: $\{A_1\}$
