@@ -12,7 +12,7 @@ To understand the motivation of this thesis, it is necessary to examine how Reac
   \item $R_k = \{r \in R_t \mid r \in R_i\}$: \textit{kept} requirements, already enforced and still valid in the target configuration.
 \end{itemize}
 
-Only the added requirements $R_a$ drive the reconfiguration: React-VEREFOO identifies which nodes in the Allocation Graph are in conflict with each added NSR and restricts the solver to those areas, while leaving the rest of the configuration untouched. The final MaxSMT problem models all traffic flows for the target set $R_t = R_a \cup R_k$, but the decision variables are limited to the nodes identified as needing reconfiguration, making the problem significantly smaller than a full recomputation~\cite{reactverefoo}.
+Only the added requirements $R_a$ drive the reconfiguration: React-VEREFOO identifies which nodes in the Allocation Graph are in conflict with each added NSR and restricts the solver to those areas, while leaving the rest of the configuration untouched. The final MaxSMT problem models all traffic flows for the target set $R_t = R_a \cup R_k$, but the decision variables are limited to the nodes identified as needing reconfiguration, making the problem significantly smaller than a full recomputation. \iffalse ~\cite{reactverefoo} \fi
 
 The key performance parameter is the proportion of kept requirements, which can be defined as:
 \[
