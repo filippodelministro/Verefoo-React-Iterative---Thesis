@@ -197,7 +197,7 @@ Table~\ref{tab:worked-example} summarises the state of all sets at each iteratio
 \centering
 \caption{Evolution of NSR sets and PercReqKept across the three iterations.}
 \label{tab:worked-example}
-\begin{tabularx}{\textwidth}{lXXXXX}
+\begin{tabularx}{\textwidth}{lXXXX}
 \hline
 \textbf{Iter.} & \textbf{Added} & $R_k$ & $R_a$ & $R_d$ \\
 \hline
@@ -210,4 +210,4 @@ Table~\ref{tab:worked-example} summarises the state of all sets at each iteratio
 
 Three observations follow from this toy example. First, as more requirements are incorporated, the area of the network that the solver must reconsider is smaller at each iteration: the nodes satisfying all previously introduced requirements are treated as fixed, and only the area relevant to the single new requirement is left as a free decision variable. Secondly, already-enforced requirements impose no additional solving cost since their satisfaction is guaranteed by construction from the previous step and the solver does not need to reason about them again. Finally, iteration 3 required no modification at all as the isolation requirement was already implied by the whitelisting default of $\mathit{FW}_1$, showing that the iterative approach can incorporate new NSRs with zero reconfiguration cost when the existing configuration already covers them.
 
-These observations are specific to this toy network and cannot be generalised directly to real deployments, where larger topologies and more complex requirement interactions make the outcome of each iteration far less predictable. They are presented here purely as a reasoning tool, to build intuition on the reasons for why the iterative approach should, in principle, reduce the overall solving effort compared to a monolithic invocation. Whether this translates into a measurable gain in practice is the question addressed experimentally in Chapter~\ref{chap:implementation}.
+These observations are specific to this toy network and cannot be generalised directly to real deployments, where larger topologies and more complex requirement interactions make the outcome of each iteration far less predictable. They are presented here purely as a reasoning tool, to build intuition for why the iterative approach should, in principle, reduce the overall solving effort compared to a monolithic invocation. Whether this translates into a measurable gain in practice is the question addressed experimentally in Chapter~\ref{chap:implementation}.
