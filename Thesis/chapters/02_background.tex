@@ -74,17 +74,37 @@ Each NSR refers to a specific traffic flow, identified by five attributes: sourc
 
 NSRs are provided to VEREFOO as part of its input, alongside the network topology. Internally, they are represented and stored as a structured set of logical constraints, expressed in a vendor-independent intermediate language. A higher-level specification language is also supported, from which the corresponding medium-level NSRs are automatically derived through a translation step. VEREFOO processes this set together with the Allocation Graph derived from the topology, and encodes each NSR as a hard constraint in the MaxSMT problem: the solver is required to find a firewall allocation and rule set that satisfies all of them without exception. If no valid solution exists — for example because user-defined constraints on the Allocation Graph have excluded all possible firewall positions — VEREFOO produces a non-enforceability report rather than a configuration. \iffalse ~\cite{verefoo} \fi
 
-% todo: add list of NSR example
+Table~\ref{tab:nsr-examples} shows three representative NSRs illustrating how requirements of different types are expressed.
+
+\begin{table}[H]
+\centering
+\caption{Representative NSR examples.}
+\label{tab:nsr-examples}
+\begin{tabularx}{\textwidth}{lllllX}
+\hline
+\textbf{Type} & \textbf{Src} & \textbf{Dst} & \textbf{Protocol} & \textbf{Port} & \textbf{Description} \\
+\hline
+Reachability & 40.40.41.1 & 130.10.0.1 & any & any & trusted client may reach server \\
+Isolation    & 40.40.42.1 & 130.10.0.1 & any & any & untrusted client is blocked \\
+Reachability & 40.40.41.1 & 130.10.0.1 & TCP & 80  & allow TCP traffic on port 80 \\
+\hline
+\end{tabularx}
+\end{table}
 
 \subsection{Service Graph}
 
 A Service Graph (SG) is the logical representation of a virtual network: a directed graph in which nodes represent Network Functions (NFs) such as web servers, load balancers, caches, or client subnetworks while edges represent the connectivity between them. The SG captures all possible end-to-end traffic paths through the network at an abstract level, without exposing low-level forwarding infrastructure such as switches and routers. It is defined taking into consideration solely the services that the network must provide, independently of any security consideration~\cite{verefoo}.
 
-The SG serves as the structural input to VEREFOO: it defines the space of possible firewall positions and the traffic paths that any allocated firewall must be able to intercept. To make this explicit, VEREFOO automatically derives an internal representation called the \textit{Allocation Graph} (AG) from the SG. For each link between any pair of nodes in the SG, the AG introduces a placeholder element called an \textit{Allocation Place} (AP) which represents a candidate position where a firewall instance may be allocated. Those Allocation Places are then used by VEREFOO during the optimal placement of firewalls. Optionally, Verefoo allow to manually constrain this process by forcing a firewall into a specific AP or excluding certain APs from consideration, for example to model pre-existing hardware firewalls that cannot be moved. \iffalse ~\cite{verefoo} \fi
+The SG serves as the structural input to VEREFOO: it defines the space of possible firewall positions and the traffic paths that any allocated firewall must be able to intercept. To make this explicit, VEREFOO automatically derives an internal representation called the \textit{Allocation Graph} (AG) from the SG. For each link between any pair of nodes in the SG, the AG introduces a placeholder element called an \textit{Allocation Place} (AP) which represents a candidate position where a firewall instance may be allocated. Those Allocation Places are then used by VEREFOO during the optimal placement of firewalls. Optionally, Verefoo allow to manually constrain this process by forcing a firewall into a specific AP or excluding certain APs from consideration, for example to model pre-existing hardware firewalls that cannot be moved. \iffalse ~\cite{verefoo} \fi Figure~\ref{fig:service-allocation-graph} illustrates how a simple Service Graph is transformed into its corresponding Allocation Graph.
 
 VEREFOO uses the Allocation Graph (AG) jointly with the Network Security Requirements (NSRs) to formulate the MaxSMT problem. Each AP corresponds to boolean decision variable that the solver uses to determines the optimal firewall placement and what filtering rules each firewall should enforce, such that all NSRs are satisfied and the total number of allocated firewalls and rules is minimised.
 
-% todo: add figures of service graph without firewall
+\begin{figure}[H]
+    \centering
+    \hspace*{-0.05\textwidth}\includegraphics[width=1.1\textwidth]{images/service and allocation graphs.png}
+    \caption{From Service Graph (left) to Allocation Graph (right). VEREFOO automatically derives the Allocation Graph by inserting an Allocation Place (shown as dashed boxes) on each link, representing a candidate position where a firewall instance may be allocated by the solver.}
+    \label{fig:service-allocation-graph}
+\end{figure}
 
 
 \subsection{VEREFOO Output}
