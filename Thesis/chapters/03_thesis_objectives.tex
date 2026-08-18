@@ -42,7 +42,12 @@ Formally, let $P_0$ denote the initial set of requirements already enforced in t
 
 The total number of solver invocations equals the number of new NSRs — a linear cost — but each individual invocation is far cheaper than a single reconfiguration over the full batch, since the solver always operates considering one new requirement only. Whether the cumulative saving per step outweighs the cost of repeating the process $n$ times is the central empirical question addressed in Chapter~\ref{chap:implementation}.
 
-% todo: add figure showing the iterative approach, with a sequence of iterations and the current configuration being passed to the next iteration
+\begin{figure}[H]
+    \centering
+    \hspace*{-0.05\textwidth}\includegraphics[width=1.1\textwidth]{images/iterative-approach.png}
+    \caption{The iterative approach: each step introduces exactly one new NSR, so the solver always sees the smallest possible incremental problem.}
+    \label{fig:iterative-approach}
+\end{figure}
 
 \section{Expected Benefits and Trade-offs}
 
