@@ -49,7 +49,11 @@ In the standard, non-incremental version of VEREFOO, all Network Security Requir
 
 A single MaxSMT call encodes all $n$ requirements simultaneously. The solver searches for a globally optimal configuration, minimising the total number of allocated firewalls and rules across the entire NSR set.
 
-% todo: inserire qui il codice del costruttore vanilla --- VerefooSerializer(NFV root, String algo)
+At the implementation level, vanilla VEREFOO is invoked through the following constructor of \texttt{VerefooSerializer}, which takes the network topology and the algorithm variant as inputs:
+
+\begin{lstlisting}[language=Java, caption={Vanilla VEREFOO constructor.}, label={lst:vanilla-constructor}]
+public VerefooSerializer(NFV root, String algo) { ... }
+\end{lstlisting}
 
 \subsection{React-VEREFOO}
 
@@ -74,6 +78,12 @@ React-VEREFOO extends vanilla VEREFOO with the ability to reuse an existing vali
 \end{algorithm}
 
 React-VEREFOO issues a single MaxSMT call, just like vanilla VEREFOO, but the problem it encodes is smaller: only the nodes in the reconfigurable area appear as free decision variables. The efficiency gain therefore depends directly on how large $R_a$ is relative to the total NSR set — the smaller the added set, the fewer nodes are flagged, and the smaller the solver problem. This relationship is captured by the percentage of requirements kept: when most requirements are kept, React-VEREFOO is significantly faster than vanilla; when most requirements change, the benefit in time execution is reduced.
+
+At the implementation level, React-VEREFOO is invoked through the same \texttt{VerefooSerializer} constructor as the vanilla variant, with an additional boolean flag that enables the reconfiguration mode:
+
+\begin{lstlisting}[language=Java, caption={React-VEREFOO constructor.}, label={lst:react-constructor}]
+public VerefooSerializer(NFV root, String algo, Boolean react) { ... }
+\end{lstlisting}
 
 The iterative approach reuses the same reconfiguration primitive as React-VEREFOO, but rather than invoking it once with a large set of new requirements, it invokes it repeatedly with $|R_a| = 1$ at each step, regardless of how many new NSRs must ultimately be incorporated.
 
@@ -107,13 +117,28 @@ The algorithm maintains two evolving structures across iterations: $\mathit{cons
 
 The total number of MaxSMT calls equals $n = |P|$, one per new NSR. Each call operates on a problem whose \textit{added} set contains exactly one requirement — the smallest possible incremental problem. The \textit{initial} set grows by one element at each step, shifting requirements from added to kept as the loop progresses.
 
-% todo: inserire qui il codice del costruttore iterativo --- VerefooSerializer(NFV root, String algo, Boolean react)
 
 \subsection{Structural Comparison}
 
-The two variants differ in three structural points. First, the number of solver invocations: vanilla VEREFOO as well as the React version, issues one MaxSMT call regardless of the number of requirements, while the iterative variant issues a number of calls equal to the number of new requirements. Consequently, the scope of each call changes: vanilla encodes the full NSR set at once, while each iterative call encodes only one new requirement on top of a fixed base. Finally, vanilla and React version have no inter-call state while the iterative variant carries $\mathit{consideredProps}$ and $\mathit{currentGraph}$ across iterations to keep track of the evolving configuration, ensuring that each step preserves all previously enforced requirements.
+The three variants differ along several structural dimensions, summarised in Table~\ref{tab:structural-comparison}. The most significant difference is the number of solver invocations: both vanilla VEREFOO and React-VEREFOO issue a single MaxSMT call, while the iterative variant issues one call per new NSR. Consequently, the scope of each call changes: vanilla encodes the full NSR set at once, React-VEREFOO processes a batch of added requirements against the existing configuration, and each iterative call encodes exactly one new requirement on top of a fixed base. Finally, vanilla VEREFOO produces a globally optimal solution, while both React-VEREFOO and the iterative variant are locally optimal — they optimise within the identified reconfigurable area but cannot guarantee global optimality across the full NSR set.
 
-% todo: valutare se aggiungere una tabella comparativa sintetica vanilla vs iterativo
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.8}
+\caption{Structural comparison of the three VEREFOO variants.}
+\label{tab:structural-comparison}
+\begin{tabularx}{\textwidth}{>{\bfseries\raggedright\arraybackslash}p{3.8cm}>{\centering\arraybackslash}X>{\centering\arraybackslash}X>{\centering\arraybackslash}X}
+\hline
+ & \textbf{Vanilla VEREFOO} & \textbf{React-VEREFOO} & \textbf{Iterative VEREFOO} \\
+\hline
+Solver invocations     & 1                 & 1                   & one per new NSR    \\
+Added NSRs per call    & all at once       & variable (batch)    & always 1           \\
+Reuses existing config & no                & yes                 & yes (at each step) \\
+Optimality             & globally  & locally & locally (greedy) \\
+\hline
+\end{tabularx}
+\end{table}
 
 \section{Worked Example}
 
