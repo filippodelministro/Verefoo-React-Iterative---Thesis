@@ -59,7 +59,6 @@ The tool provides three formal guarantees. \textit{Automation} ensures that no h
     \label{fig:verefoo-inputs-outputs}
 \end{figure}
 
-%! ricontrollare da qui
 
 Before the MaxSMT problem is formulated, VEREFOO must compute the set of traffic flows to be modelled. Two algorithms are available for this step. The \textit{Maximal Flows} algorithm (MF) or \textit{Atomic Predicates} algorithm (AP). The MF algorithm groups packets into maximal flows, which are flows that are not subflows of any other flow; in other words, multiple packets with identical traversal behaviour are represented by a single entity, reducing the number of constraints in the problem~\cite{verefoo}. The Atomic Predicates instead, goes further by decomposes every traffic predicate into a set of atomic predicates that are minimal, unique, and mutually disjoint, then expresses each flow in terms of these atomic predicates. This additional decomposition reduces the number of distinct cases the solver must consider and has been shown to provide better performance for automatic (re)configuration problems~\cite{reactverefoo}. For this reason, all experiments in this thesis use the AP algorithm.
 
@@ -113,7 +112,6 @@ When the MaxSMT problem is solved successfully, VEREFOO produces two complementa
 
 Together, these two outputs constitute the full security configuration of the network at the logical level of the Service Graph, independent of the physical infrastructure. A subsequent translation step converts the abstract filtering policies into concrete rules for specific implementations such as iptables, BPF, or OVS~\cite{verefoo}. If instead no solution exists, for example because user-defined constraints on the AG have excluded all viable firewall positions, VEREFOO returns a non-enforceability report in place of the configuration.
 
-% todo: insert image: allocation graph, with allocation places
 %?: Verefoo non ragiona su singoli pacchetti, ma su flussi di traffico %todo => spiegare benefici
 
 \subsection{Verefoo validation}
@@ -130,6 +128,13 @@ In operational environments, network security policies are not static: NSRs evol
 
 React-VEREFOO takes two inputs: the existing firewall configuration (allocation scheme and filtering rules) and a pair of NSR sets — the \textit{initial set} $R_i$, describing the requirements already enforced by the current configuration, and the \textit{target set} $R_t$, describing the requirements that must be enforced after reconfiguration. The approach proceeds in three steps. \iffalse ~\cite{reactverefoo} \fi
 
+\begin{figure}[H]
+    \centering
+    \hspace*{-0.05\textwidth}\includegraphics[width=1.1\textwidth]{images/react-verefoo-inputs-outputs.png}
+    \caption{High-level view of React-VEREFOO: given the existing configuration, the initial and the updated NSR sets, it classifies requirements into added, kept, and deleted groups, identifies the minimal network area affected by the added requirements, and solves a reduced MaxSMT problem restricted to that area, leaving the rest of the configuration untouched.}
+    \label{fig:react-verefoo-pipeline}
+\end{figure}
+
 \paragraph{Step 1 — NSR classification.} React-VEREFOO partitions every NSR in $R_i \cup R_t$ into one of three groups:
 \begin{itemize}
   \item $R_d = \{r \in R_i \mid r \notin R_t\}$: \textit{deleted} requirements, previously enforced but no longer needed. They are simply excluded from the new problem formulation.
@@ -143,9 +148,16 @@ For an added \textit{isolation} requirement (traffic that must be blocked), the 
 
 For an added \textit{reachability} requirement (traffic that must be allowed end-to-end), the algorithm checks whether at least one atomic flow reaches the destination without being blocked. If such a flow already exists, the requirement is already satisfied and no reconfiguration is needed. Otherwise, the nodes that are currently blocking the traffic are flagged as eligible for reconfiguration.
 
-% todo: add figure explaining step 2 for both cases (isolation and reachability)
+In both cases, the algorithm selects all nodes that \textit{could potentially} be used to fulfill the new requirement, since the optimal choice among them is left to the solver. Nodes not flagged by any added requirement retain their current configuration and are excluded from the decision variables of the subsequent MaxSMT problem. 
 
-In both cases, the algorithm selects all nodes that \textit{could potentially} be used to fulfill the new requirement, since the optimal choice among them is left to the solver. Nodes not flagged by any added requirement retain their current configuration and are excluded from the decision variables of the subsequent MaxSMT problem.
+An example of this behaviour for both cases is shown in Figure~\ref{fig:react-step2}. The topologies depicted are purely illustrative and should not be considered realistic network scenarios; they are presented solely to clarify what happens internally when a new isolation or reachability requirement is introduced.
+
+\begin{figure}[H]
+    \centering
+    \hspace*{-0.05\textwidth}\includegraphics[width=1.1\textwidth]{images/step2-reconfigurable-area.png}
+    \caption{React-VEREFOO Step 2: example of identification of the network area to reconfigure, for the two types of added NSR. \textbf{(a) New isolation requirement:} both FW\textsubscript{1} and FW\textsubscript{2} are initially configured to allow Client$\to$Server traffic. Since no node currently blocks the flow, all nodes on the path are flagged as candidates for reconfiguration, and one of them must be configured to enforce the new requirement. \textbf{(b) New reachability requirement:} FW\textsubscript{1} is initially configured to deny Client$\to$Server traffic, while FW\textsubscript{2} allows it. Since FW\textsubscript{1} is the node actively blocking the flow, only it is flagged for reconfiguration while FW\textsubscript{2} is left unchanged.}
+    \label{fig:react-step2}
+\end{figure}
 
 \paragraph{Step 3 — MaxSMT problem formulation and solving.} Once the reconfigurable area has been identified, React-VEREFOO formulates a MaxSMT problem. This problem models traffic flows for all NSRs in the target set, ensuring that the final configuration is correct with respect to all requirements. However, only the flagged nodes appear as free decision variables; the configuration of all other nodes is treated as fixed. This restriction dramatically reduces the size of the search space compared to a full recomputation. \iffalse ~\cite{reactverefoo} \fi
 
@@ -153,7 +165,6 @@ The soft constraints are also adjusted to bias the solver toward reusing the exi
 
 The result is an updated allocation scheme and a revised set of filtering policies that satisfy all requirements in the target set, with formal correctness guaranteed by construction. As with VEREFOO, the output may not be globally optimal, since only a subset of the network is reconsidered, but it is optimal within the identified reconfiguration area.
 
-% todo: add illustration of React-VEREFOO approach; 
 
 Experimental results confirm that React-VEREFOO is significantly more efficient than vanilla VEREFOO when the proportion of modified NSRs is small, as the reduced problem size leads to much shorter solving times. However, when a large fraction of the requirements changes, the benefit is reduced and performance converges toward the monolithic baseline. This observation motivates the approach investigated in this thesis: by pushing the incremental logic to its extreme and introducing only one new NSR per iteration. The proportion of modified requirements is always minimised, potentially achieving consistent speedups regardless of the total number of requirements.
 
