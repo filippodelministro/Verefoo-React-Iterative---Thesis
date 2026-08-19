@@ -1,14 +1,99 @@
 % !TEX root = ../tesi.tex
 
 \section{Implementation}
-% - File modificati in React-VEREFOO:
-    % - serializer
-    % -
-% - Gestione delle properties tra iterazioni
-% - Struttura del loop iterativo
-% - Come viene passato lo stato (configurazione) da un'iterazione alla successiva
-% todo: completare con i dettagli specifici dell'implementazione
 
+The iterative variant is implemented by modifying the \texttt{VerefooSerializer} class of React-VEREFOO which is the entry point of the VEREFOO tool. Rather than invoking React-VEREFOO once with the full set of new requirements, an intermediate loop introduce each new NSR one at a time. The constructor of VEREFOO Vanilla, which is also part of the Serializer file, is left untouched as well as all other components — \texttt{VerefooProxy}, the MaxSMT encoding, the \texttt{Translator}. 
+
+\subsection{Entry Point}
+
+As per the React-VEREFOO design, the iterative constructor has the following signature:
+
+\begin{lstlisting}[language=Java, caption={Iterative VEREFOO constructor signature.}, label={lst:iterative-impl-constructor}]
+public VerefooSerializer(NFV root, String algo, Boolean react)
+\end{lstlisting}
+
+The parameters match those of the React-VEREFOO constructor: \texttt{root} is the input \texttt{NFV} object containing the network topology and the full NSR set, \texttt{algo} selects the algorithm variant (\texttt{"AP"} for Atomic Predicates or \texttt{"MF"} for MaxFlow)\footnote{In this thesis, only the Atomic Predicates algorithm is used, as React-VEREFOO supports only the \texttt{AP} variant.}, and \texttt{react} is the boolean flag that activates the React-VEREFOO reconfiguration. 
+
+The constructor begins by building the Allocation Graph from the input Service Graph, exactly as the other two variants do:
+
+\begin{lstlisting}[language=Java, caption={Allocation graph construction.}, label={lst:iterative-init}]
+AllocationGraphGenerator agg = new AllocationGraphGenerator(root, react);
+root = agg.getAllocationGraph();
+\end{lstlisting}
+
+\subsection{Initialization}
+
+Before the iterative loop starts, two data structures are initialized: \texttt{consideredProps} and \texttt{currentGraph}. \texttt{consideredProps} holds the requirements that have already been enforced and which will be passed as the \textit{initial} set to React-VEREFOO at each step. \texttt{currentGraph} holds the current state of the network graph, which is updated after every successful solver invocation.
+
+\begin{lstlisting}[language=Java, caption={Initialization of the iterative state.}, label={lst:iterative-state-init}]
+List<Property> consideredProps = new ArrayList<>();
+if (initialProp != null) {
+    consideredProps.addAll(initialProp);
+}
+Graph currentGraph = g;
+\end{lstlisting}
+
+If the input \texttt{NFV} object contains a pre-existing set of already-enforced requirements (\texttt{initialProp}), they are loaded into \texttt{consideredProps} at the start. This supports the general case in which the network already has a valid configuration before the first new NSR is introduced, corresponding to $P_0 \neq \emptyset$ in the algorithm description of Chapter~\ref{chap:iterative}.
+
+\subsection{Iterative Loop}
+
+% todo: controllare il codice con il prof!! Non capisco bene perché singleProp.addAll(consideredProps)
+% todo: se corretto, valutare di cambiare il nome di singleProp perché fuorviante
+The main loop iterates over the list of new NSRs that must be incorporated: \texttt{prop}. At each iteration, a list \texttt{singleProp} is constructed by placing the current new requirement first, followed by all requirements in \texttt{consideredProps}. This list is then passed to \texttt{VerefooProxy}, which internally executes React-VEREFOO:
+
+\begin{lstlisting}[language=Java, caption={Core of the iterative loop.}, label={lst:iterative-loop}]
+for (Property currentProp : prop) {
+    List<Property> singleProp = new ArrayList<>();
+    singleProp.add(currentProp);
+    singleProp.addAll(consideredProps);
+
+    VerefooProxy test = new VerefooProxy(
+        currentGraph,
+        root.getHosts(),
+        root.getConnections(),
+        root.getConstraints(),
+        consideredProps,   // initial set (already enforced)
+        singleProp,        // full set for this iteration
+        paths,
+        AlgoUsed
+    );
+    ...
+}
+\end{lstlisting}
+
+The \texttt{VerefooProxy} takes two separate NSR lists: the \textit{initial} set (\texttt{consideredProps}) and the \textit{full} set for this invocation (\texttt{singleProp}). React-VEREFOO uses the difference between the two to classify requirements into added ($R_a$), kept ($R_k$), and deleted ($R_d$) groups. Since by construction \texttt{singleProp} contains exactly one element more than \texttt{consideredProps} React-VEREFOO always sees $|R_a| = 1$.
+
+% \subsection{State Update}
+
+After each \texttt{VerefooProxy} call, the result is examined. If the solver returns SAT, the current requirement is added to \texttt{consideredProps} and \texttt{currentGraph} is updated to the graph produced by the solver, so that the intermediate result is propagated to the next iteration. If the solver returns UNSAT, the loop does not break immediately, but instead, \texttt{sat} is set to \texttt{false} and the current \texttt{root} is kept as the result. The failure is recorded and surfaced to the caller after the loop completes.
+
+% \begin{lstlisting}[language=Java, caption={State update on SAT.}, label={lst:iterative-sat}]
+% if (res.result != Status.UNSATISFIABLE && res.result != Status.UNKNOWN) {
+%     // translate Z3 model back to network configuration
+%     t = new Translator(...);
+%     result = t.convert(AlgoUsed);
+%     root = result;
+
+%     // promote current requirement to the initial set
+%     consideredProps.add(currentProp);
+
+%     // advance the graph pointer to the updated graph
+%     currentGraph = root.getGraphs().getGraph().stream()
+%         .filter(gr -> gr.getId() == currentGraphId)
+%         .findFirst()
+%         .orElseThrow(...);
+% } else {
+%     sat = false;
+%     result = root;
+% }
+% \end{lstlisting}
+
+% The graph update step is worth noting: after the \texttt{Translator} converts the Z3 model into a new \texttt{NFV} object (\texttt{root = result}), the graph with the same identifier is retrieved from the updated object. This is necessary because the \texttt{Translator} produces a fresh \texttt{NFV} instance, and \texttt{currentGraph} must point into that new instance rather than the old one.
+
+
+\subsection{Summary of Changes}
+
+In summaru, the core changes to the original React-VEREFOO is the introduction of the iterative loop: instead of passing the full set of new requirements to React-VEREFOO in a single call, execution is broken multiple intermediate steps, each adding exactly one requirement at a time. Between steps, the graph and the set of enforced requirements are updated, so that each React-VEREFOO invocation builds on a valid and already verified configuration. All other components — \texttt{VerefooProxy}, the MaxSMT encoding, the \texttt{Translator} — remain unchaged.
 
 
 \section{Testing}
