@@ -62,8 +62,6 @@ The tool provides three formal guarantees. \textit{Automation} ensures that no h
 
 Before the MaxSMT problem is formulated, VEREFOO must compute the set of traffic flows to be modelled. Two algorithms are available for this step. The \textit{Maximal Flows} algorithm (MF) or \textit{Atomic Predicates} algorithm (AP). The MF algorithm groups packets into maximal flows, which are flows that are not subflows of any other flow; in other words, multiple packets with identical traversal behaviour are represented by a single entity, reducing the number of constraints in the problem~\cite{verefoo}. The Atomic Predicates instead, goes further by decomposes every traffic predicate into a set of atomic predicates that are minimal, unique, and mutually disjoint, then expresses each flow in terms of these atomic predicates. This additional decomposition reduces the number of distinct cases the solver must consider and has been shown to provide better performance for automatic (re)configuration problems~\cite{reactverefoo}. For this reason, all experiments in this thesis use the AP algorithm.
 
-% todo: add illustration to show the difference between MF and AP algorithms
-
 
 \subsection{Network Security Requirements}
 
