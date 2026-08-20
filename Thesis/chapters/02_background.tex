@@ -60,7 +60,7 @@ The tool provides three formal guarantees. \textit{Automation} ensures that no h
 \end{figure}
 
 
-Before the MaxSMT problem is formulated, VEREFOO must compute the set of traffic flows to be modelled. Two algorithms are available for this step. The \textit{Maximal Flows} algorithm (MF) or \textit{Atomic Predicates} algorithm (AP). The MF algorithm groups packets into maximal flows, which are flows that are not subflows of any other flow; in other words, multiple packets with identical traversal behaviour are represented by a single entity, reducing the number of constraints in the problem~\cite{verefoo}. The Atomic Predicates instead, goes further by decomposes every traffic predicate into a set of atomic predicates that are minimal, unique, and mutually disjoint, then expresses each flow in terms of these atomic predicates. This additional decomposition reduces the number of distinct cases the solver must consider and has been shown to provide better performance for automatic (re)configuration problems~\cite{reactverefoo}. For this reason, all experiments in this thesis use the AP algorithm.
+Before the MaxSMT problem is formulated, VEREFOO must compute the set of traffic flows to be modelled. Two algorithms are available for this step. The \textit{Maximal Flows} algorithm (MF) or \textit{Atomic Predicates} algorithm (AP). The MF algorithm groups packets into maximal flows, which are flows that are not subflows of any other flow; in other words, multiple packets with identical traversal behaviour are represented by a single entity, reducing the number of constraints in the problem~\cite{verefoo}. The Atomic Predicates instead, goes further by decomposes every traffic predicate into a set of atomic predicates that are minimal, unique, and mutually disjoint, then expresses each flow in terms of these atomic predicates. This additional decomposition reduces the number of distinct cases the solver must consider and has been shown to provide better performance for automatic (re)configuration problems~\cite{reactverefoo}.
 
 
 \subsection{Network Security Requirements}
@@ -133,7 +133,7 @@ React-VEREFOO takes two inputs: the existing firewall configuration (allocation 
     \label{fig:react-verefoo-pipeline}
 \end{figure}
 
-\paragraph{Step 1 — NSR classification.} React-VEREFOO partitions every NSR in $R_i \cup R_t$ into one of three groups:
+\paragraph{Step 1 — NSR classification.} React-VEREFOO partitions every NSR into one of three groups:
 \begin{itemize}
   \item $R_d = \{r \in R_i \mid r \notin R_t\}$: \textit{deleted} requirements, previously enforced but no longer needed. They are simply excluded from the new problem formulation.
   \item $R_a = \{r \in R_t \mid r \notin R_i\}$: \textit{added} requirements, new NSRs that must be enforced but are not yet satisfied. These are the sole driver of reconfiguration.
@@ -144,16 +144,16 @@ React-VEREFOO takes two inputs: the existing firewall configuration (allocation 
 
 For an added \textit{isolation} requirement (traffic that must be blocked), the algorithm examines all atomic flows associated with that requirement. If a flow is already blocked by an allocated firewall, no action is needed for that flow. If instead no node along the path currently blocks the traffic, all nodes on that path are flagged as eligible for reconfiguration, since one of them must be configured to enforce the isolation.
 
-For an added \textit{reachability} requirement (traffic that must be allowed end-to-end), the algorithm checks whether at least one atomic flow reaches the destination without being blocked. If such a flow already exists, the requirement is already satisfied and no reconfiguration is needed. Otherwise, the nodes that are currently blocking the traffic are flagged as eligible for reconfiguration.
+For an added \textit{reachability} requirement (traffic that must be allowed), the algorithm checks whether at least one atomic flow reaches the destination without being blocked. If such a flow already exists, the requirement is already satisfied and no reconfiguration is needed. Otherwise, the nodes that are currently blocking the traffic are flagged as eligible for reconfiguration.
 
 In both cases, the algorithm selects all nodes that \textit{could potentially} be used to fulfill the new requirement, since the optimal choice among them is left to the solver. Nodes not flagged by any added requirement retain their current configuration and are excluded from the decision variables of the subsequent MaxSMT problem. 
 
-An example of this behaviour for both cases is shown in Figure~\ref{fig:react-step2}. The topologies depicted are purely illustrative and should not be considered realistic network scenarios; they are presented solely to clarify what happens internally when a new isolation or reachability requirement is introduced.
+An example of this behaviour for both cases is shown in Figure~\ref{fig:react-step2}. The topologies in this example are purely illustrative and should not be considered realistic network scenarios; they are presented solely to clarify what happens internally when a new isolation or reachability requirement is introduced.
 
 \begin{figure}[H]
     \centering
     \hspace*{-0.05\textwidth}\includegraphics[width=1.1\textwidth]{images/step2-reconfigurable-area.png}
-    \caption{React-VEREFOO Step 2: example of identification of the network area to reconfigure, for the two types of added NSR. \textbf{(a) New isolation requirement:} both FW\textsubscript{1} and FW\textsubscript{2} are initially configured to allow Client$\to$Server traffic. Since no node currently blocks the flow, all nodes on the path are flagged as candidates for reconfiguration, and one of them must be configured to enforce the new requirement. \textbf{(b) New reachability requirement:} FW\textsubscript{1} is initially configured to deny Client$\to$Server traffic, while FW\textsubscript{2} allows it. Since FW\textsubscript{1} is the node actively blocking the flow, only it is flagged for reconfiguration while FW\textsubscript{2} is left unchanged.}
+    \caption{React-VEREFOO Step 2: example of identification of the network area to reconfigure, depending on the type of added NSR. \textbf{(a) New isolation requirement:} both FW\textsubscript{1} and FW\textsubscript{2} are initially configured to allow Client$\to$Server traffic. Since no node currently blocks the flow, all nodes on the path are flagged as candidates for reconfiguration, and one of them must be configured to enforce the new requirement. \textbf{(b) New reachability requirement:} FW\textsubscript{1} is initially configured to deny Client$\to$Server traffic, while FW\textsubscript{2} allows it. Since FW\textsubscript{1} is the node actively blocking the flow, only it is flagged for reconfiguration while FW\textsubscript{2} is left unchanged.}
     \label{fig:react-step2}
 \end{figure}
 

@@ -53,14 +53,14 @@ public VerefooSerializer(NFV root, String algo) { ... }
 
 \subsection{React-VEREFOO}
 
-React-VEREFOO extends vanilla VEREFOO with the ability to reuse an existing valid configuration when the NSR set changes, rather than recomputing everything from scratch~\cite{reactverefoo}. It takes two NSR sets as input: the \textit{initial} set $P_0$, representing the requirements already enforced by the current configuration, and the \textit{added} set $R_a$, representing the new requirements that must be incorporated. Internally, React-VEREFOO classifies every NSR into deleted ($R_d$), added ($R_a$), or kept ($R_k$) groups (as described in Section~\ref{chap:background}), identifies the minimal network area affected by the added requirements, and restricts the solver to that area while leaving the rest of the configuration untouched.
+React-VEREFOO extends vanilla VEREFOO with the ability to reuse an existing valid configuration when the NSR set changes, rather than recomputing everything from scratch~\cite{reactverefoo}. It takes two NSR sets as input: the \textit{initial} set $P_0$, representing the requirements already enforced by the current configuration, and the \textit{target} set $R_t$, representing the new requirements that must be incorporated. Internally, React-VEREFOO classifies every NSR into deleted ($R_d$), added ($R_a$), or kept ($R_k$) groups (as described in Section~\ref{chap:background}), identifies the minimal network area affected by the added requirements, and restricts the solver to that area while leaving the rest of the configuration untouched.
 
 \begin{algorithm}[H]
 \caption{React-VEREFOO}
 \label{alg:react}
 \begin{algorithmic}[1]
-\Require Current graph $G$, initial NSR set $P_0$, added NSR set $R_a$
-\Ensure Updated firewall allocation satisfying all $p \in P_0 \cup R_a$, or UNSAT
+\Require Current graph $G$, initial NSR set $P_0$, target NSR set $R_t$
+\Ensure Updated firewall allocation satisfying all $p \in P_0 \cup R_t$, or UNSAT
 % \State Classify NSRs: $R_k \gets P_0$,\quad $R_d \gets \emptyset$,\quad $R_a \gets R_a$
 \State Classify NSRs: $R_k$, $R_a$, $R_d$ 
 \State Identify reconfigurable area of $G$ based on $R_a$
@@ -87,7 +87,7 @@ The iterative approach reuses the same reconfiguration primitive as React-VEREFO
 
 The iterative variant builds on React-VEREFOO as an internal primitive introducing NSRs one at a time. The key insight is that at every iteration the solver receives a minimal incremental problem with only one new requirement on top of a stable and already-verified configuration.
 
-The algorithm maintains two evolving structures across iterations: $\mathit{consideredProps}$, the set of NSRs already enforced and passed as the \textit{initial} set to React-VEREFOO; and $\mathit{currentGraph}$, the network graph as updated by the most recent SAT result. Both are initialised before the loop begins: $\mathit{consideredProps}$ with any pre-existing NSRs (denoted $P_0$), and $\mathit{currentGraph}$ with the original input graph.
+The algorithm maintains two evolving structures across iterations: $\mathit{consideredProps}$, the set of NSRs already enforced and passed as the \textit{initial} set to React-VEREFOO and $\mathit{currentGraph}$, the network graph as updated by the most recent SAT result. Both are initialised before the loop begins: $\mathit{consideredProps}$ with any pre-existing NSRs (denoted $P_0$), and $\mathit{currentGraph}$ with the original input graph.
 
 \begin{algorithm}[H]
 \caption{Iterative VEREFOO}
