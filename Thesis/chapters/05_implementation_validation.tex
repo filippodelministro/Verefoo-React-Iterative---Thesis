@@ -31,8 +31,9 @@ If the input \texttt{NFV} object contains a pre-existing set of already enforced
 
 \subsection{Core change:  the Iterative Loop}
 
-% todo: controllare il codice con il prof!! Non capisco bene perché singleProp.addAll(consideredProps)
-% todo: se corretto, valutare di cambiare il nome di singleProp perché fuorviante
+
+%todo: singleProp indica la lista delle targetProp; il nome vuole indicare che aggiungiamo una sola proprietà alla volta; cambiamo nome in targetProp?
+
 The main loop iterates over \texttt{prop}, the list of new requirements (NSRs) to incorporate. At each step, \texttt{VerefooProxy} is expects two NSR lists: \texttt{consideredProps} as the initial set of requirements already enforced, and \texttt{singleProp} as the new property to be added\footnote{\texttt{singleProp} is built as shown in Listing~\ref{lst:iterative-loop} to match the input format expected by the \texttt{VerefooProxy} interface.}. \texttt{VerefooProxy} then computes the difference between the two lists to derive the \textit{added}, \textit{kept}, and \textit{deleted} requirement sets, as described in Chapter~\ref{chap:background}. By construction, $R_a$ (the \textit{added} set) always contains exactly one element.
 
 \begin{lstlisting}[language=Java, caption={Core of the iterative loop.}, label={lst:iterative-loop}]
@@ -101,7 +102,7 @@ In summary, the core changes to the original React-VEREFOO is the introduction o
 
 The experimental evaluation aims to assess the performance of the iterative approach against vanilla VEREFOO across different network topologies and NSR set sizes. The metric used is total execution time: the cumulative time required to reach a final valid configuration, including all intermediate React-VEREFOO invocations. Each test case was repeated over 20 runs, and the reported values represent the average over those runs.
 
-% ? capire se aggiungere o meno
+% todo: confermare con prof (vedi capitolo 6)s
 Evaluating additional metrics, such as the number of allocated firewall instances and the number of generated filtering rules, which would quantify any loss of global optimality introduced by the greedy sequential strategy, is left as a direction for future work.
 
 Three benchmark topologies are used, chosen to cover a spectrum from small real-world networks to large synthetic ones.
@@ -120,7 +121,6 @@ Three benchmark topologies are used, chosen to cover a spectrum from small real-
 % - Variabili testate: dimensione della rete, numero di NSR, ordine degli NSR
 % - Configurazioni hardware/software utilizzate per i test
 % - Numero di ripetizioni per test, metodo di calcolo della media
-% ?: controllare dettagli specifici delle configurazioni
 
 All three test classes invoke \texttt{VerefooSerializer} with the \texttt{react = true} flag and the Atomic Predicates (\texttt{AP}) algorithm. The vanilla baseline is obtained by invoking the single-argument constructor on the same input, without the iterative loop. The configurations differ in how the network topology and NSR set are generated.
 
@@ -169,6 +169,7 @@ Figure~\ref{fig:results_comparison} reports the average execution times measured
 
 
 \subsection{Comparison and Discussion}
+% todo: controllare con prof se aggiungere un paragrafo di discussione dei risultati, oppure rimandare al capitolo 6
 % - Iterativo vs monolitico: quando l'approccio iterativo è più veloce?
 % - Analisi della perdita di ottimalità (se presente): più firewall? più regole?
 % - Considerazioni su scalabilità

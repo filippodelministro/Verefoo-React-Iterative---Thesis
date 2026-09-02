@@ -22,13 +22,6 @@ The higher this ratio, the smaller the added and deleted sets, and consequently 
 
 The key idea of this thesis is to push this observation to its logical extreme. Instead of processing all new NSRs in a single reconfiguration step, the proposed approach introduces them \textbf{one at a time}. At each step, only one new requirement is presented to React-VEREFOO as added, while everything enforced so far falls into the kept set. This means the reconfiguration area identified at each step is always the smallest it could possibly be — a single requirement drives each solver call, regardless of how many requirements must ultimately be incorporated. The proportion of kept requirements is therefore always at its theoretical maximum for the given state of the network, and grows larger with every iteration as the kept set expands.
 
-% todo: restore this once checked
-% Formally, at each iteration $i$, the current configuration enforces $R_k^{(i)} = R_i \cup \{A_1, \ldots, A_{i-1}\}$ and the single new requirement $A_i$ constitutes the entire added set $R_a^{(i)} = \{A_i\}$. This gives:
-% \[
-%   \text{PercReqKept}^{(i)} = \frac{|R_k^{(i)}|}{|R_k^{(i)}| + 1}
-% \]
-% which grows toward 100\% as more requirements are incorporated, and is always strictly higher than the PercReqKept achievable by processing the same requirements in a single batch. By construction, each individual solver call thus operates on the smallest possible incremental problem.
-
 Concretely, the process unfolds as a chain of reconfiguration steps. The network starts from an existing valid configuration. One new requirement is then selected and processed by the iterative system, which internally invokes React-VEREFOO to compute the minimal update to the current configuration. The result, the new allocation scheme and updated filtering rules become the starting point for the next step. Another requirement is then introduced, the process repeats, and so on until every new requirement has been incorporated. At no point is the full set of new requirements processed at once; the tool always sees exactly one addition on top of an otherwise stable configuration.
 
 Formally, let $P_0$ denote the initial set of requirements already enforced in the network and $\{A_1, A_2, A_3, \ldots\}$ the sequence of new NSRs to be introduced. The iterative process unfolds as the following steps:
@@ -57,9 +50,8 @@ The proposed approach is expected to yield consistent performance improvements o
 
 \paragraph{Trade-offs.} The main cost of the approach is the linear number of solver invocations: where vanilla VEREFOO solves one problem and React-VEREFOO solves one (possibly large) problem, the iterative variant proposed in this thesis solves $n$ small problems. Each invocation carries a fixed overhead due to parsing, constraint encoding, and solver initialization, which accumulates over the $n$ iterations. Whether solving $n$ small problems is globally faster than solving one large problem, is the central question this thesis aims to address.
 
-% ? to confirm that no guarantee on gloabl optimal can be given 
 A second trade-off concerns the quality of the final configuration. Vanilla VEREFOO optimises globally over the full NSR set, producing a configuration that minimises the total number of firewalls and rules jointly. The proposed iterative approach, by contrast, optimises locally at each step. In particular, a firewall placed during the first iteration to satisfy the first new NSR (defined as $A_1$ in previous example) may not be the best structural choice once the subsequent new requirements ($A_2, \ldots, A_n$) are taken into account in the following iterations. Whether and to what extent this affects the quality of the final configuration in practice remains an open question, and could be the subject of further investigation.
 
-% ? to check if this applies
+% todo: confermare con prof (vedi capitolo 6)
 The approach investigated in this thesis focuses exclusively on the addition of new NSRs. The case of NSR removal is not considered: when a requirement must be revoked, the iterative strategy described here does not apply, and a separate reconfiguration procedure would be needed. Similarly, the thesis considers only the whitelisting and blacklisting policy modes supported by React-VEREFOO, and the evaluation is conducted on three specific benchmark topologies. Generalisation to other policy modes or network types is left as future work.
 

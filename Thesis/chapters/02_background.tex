@@ -110,10 +110,8 @@ When the MaxSMT problem is solved successfully, VEREFOO produces two complementa
 
 Together, these two outputs constitute the full security configuration of the network at the logical level of the Service Graph, independent of the physical infrastructure. A subsequent translation step converts the abstract filtering policies into concrete rules for specific implementations such as iptables, BPF, or OVS~\cite{verefoo}. If instead no solution exists, for example because user-defined constraints on the AG have excluded all viable firewall positions, VEREFOO returns a non-enforceability report in place of the configuration.
 
-%?: Verefoo non ragiona su singoli pacchetti, ma su flussi di traffico %todo => spiegare benefici
-
 \subsection{Verefoo validation}
-% ? check the testing topologies before final version!!
+% todo: controllare le topologie utilizzate nei test prima della versione finale!!
 VEREFOO has been validated on both synthetic and real-world network topologies, including well-known benchmarks such as the Stanford and CESNET networks, demonstrating reliability and scalability across a range of network sizes and requirement sets~\cite{verefoo}.
 
 Despite these strengths, VEREFOO's monolithic approach has a fundamental scalability limitation: the entire set of NSRs and the full network topology are encoded into a single MaxSMT problem. As the number of requirements or the size of the network grows, the complexity of the problem increases significantly, leading to prohibitive computation times. This limitation motivates the development of more efficient alternatives, starting with React-VEREFOO.
