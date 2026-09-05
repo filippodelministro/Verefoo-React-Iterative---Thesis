@@ -1,0 +1,176 @@
+% !TEX root = ../tesi.tex
+
+\section{Implementation}
+
+The iterative variant is implemented by modifying \texttt{VerefooSerializer}, the class that serves as the entry point to the VEREFOO tool: all invocations — vanilla, React, and now iterative — start here. Rather than passing the full set of new requirements to React-VEREFOO in a single call, the modified constructor wraps the React-VEREFOO invocation in a loop that introduces one NSR at a time. The vanilla constructor, also defined in \texttt{VerefooSerializer}, is left untouched, as are all downstream components — \texttt{VerefooProxy}, the MaxSMT encoding, and the \texttt{Translator}.
+
+\subsection{Entry Point and initialization}
+
+Since the iterative variant modifies the React-VEREFOO constructor, it shares the same parameters: \texttt{root} is the input \texttt{NFV} object containing the network topology and the full NSR set, \texttt{algo} selects the algorithm variant (\texttt{"AP"} for Atomic Predicates or \texttt{"MF"} for MaxFlow)\footnote{In this thesis, only the Atomic Predicates algorithm is used, as React-VEREFOO supports only the \texttt{AP} variant.}, and \texttt{react} is the boolean flag that activates the React-VEREFOO reconfiguration.
+
+The constructor begins by building the Allocation Graph from the input Service Graph, exactly as the other two variants do:
+
+\begin{lstlisting}[language=Java, caption={Allocation graph construction.}, label={lst:iterative-init}]
+AllocationGraphGenerator agg = new AllocationGraphGenerator(root, react);
+root = agg.getAllocationGraph();
+\end{lstlisting}
+
+% \subsection{Initialization}
+
+Before the iterative loop starts, two data structures are initialized: \texttt{consideredProps} and \texttt{currentGraph}. \texttt{consideredProps} holds the requirements that have already been enforced and which will be passed as the \textit{initial} set to React-VEREFOO at each step, while \texttt{currentGraph} holds the current state of the network graph, which is updated after every successful solver invocation.
+
+\begin{lstlisting}[language=Java, caption={Initialization of the iterative state.}, label={lst:iterative-state-init}]
+List<Property> consideredProps = new ArrayList<>();
+if (initialProp != null) {
+    consideredProps.addAll(initialProp);
+}
+Graph currentGraph = g;
+\end{lstlisting}
+
+If the input \texttt{NFV} object contains a pre-existing set of already enforced requirements (\texttt{initialProp}), they are loaded into \texttt{consideredProps} at the start. This supports the general case in which the network already has a valid configuration before the first new NSR is introduced, corresponding to $P_0 \neq \emptyset$ in the algorithm description of Chapter~\ref{chap:iterative}.
+
+\subsection{Core change:  the Iterative Loop}
+
+
+%todo: singleProp indica la lista delle targetProp; il nome vuole indicare che aggiungiamo una sola proprietà alla volta; cambiamo nome in targetProp?
+
+The main loop iterates over \texttt{prop}, the list of new requirements (NSRs) to incorporate. At each step, \texttt{VerefooProxy} is expects two NSR lists: \texttt{consideredProps} as the initial set of requirements already enforced, and \texttt{singleProp} as the new property to be added\footnote{\texttt{singleProp} is built as shown in Listing~\ref{lst:iterative-loop} to match the input format expected by the \texttt{VerefooProxy} interface.}. \texttt{VerefooProxy} then computes the difference between the two lists to derive the \textit{added}, \textit{kept}, and \textit{deleted} requirement sets, as described in Chapter~\ref{chap:background}. By construction, $R_a$ (the \textit{added} set) always contains exactly one element.
+
+\begin{lstlisting}[language=Java, caption={Core of the iterative loop.}, label={lst:iterative-loop}]
+for (Property currentProp : prop) {
+    List<Property> singleProp = new ArrayList<>();
+    singleProp.add(currentProp);
+    singleProp.addAll(consideredProps);
+
+    VerefooProxy test = new VerefooProxy(
+        currentGraph,
+        root.getHosts(),
+        root.getConnections(),
+        root.getConstraints(),
+        consideredProps,   // initial set (already enforced)
+        singleProp,        // new property to be enforced
+        paths,
+        AlgoUsed
+    );
+    ...
+}
+\end{lstlisting}
+
+% \subsection{State Update}
+
+After each \texttt{VerefooProxy} call, the result is examined. If all the requirements are satisfied, the current requirement is added to \texttt{consideredProps} and \texttt{currentGraph} is updated to the graph produced by the solver, so that the intermediate result is propagated to the next iteration. If the solver returns UNSAT, the loop does not break immediately, but instead the current \texttt{root} is kept as the result and the failure is recorded and surfaced to the caller after the loop completes.
+
+% \begin{lstlisting}[language=Java, caption={State update on SAT.}, label={lst:iterative-sat}]
+% if (res.result != Status.UNSATISFIABLE && res.result != Status.UNKNOWN) {
+%     // translate Z3 model back to network configuration
+%     t = new Translator(...);
+%     result = t.convert(AlgoUsed);
+%     root = result;
+
+%     // promote current requirement to the initial set
+%     consideredProps.add(currentProp);
+
+%     // advance the graph pointer to the updated graph
+%     currentGraph = root.getGraphs().getGraph().stream()
+%         .filter(gr -> gr.getId() == currentGraphId)
+%         .findFirst()
+%         .orElseThrow(...);
+% } else {
+%     sat = false;
+%     result = root;
+% }
+% \end{lstlisting}
+
+% The graph update step is worth noting: after the \texttt{Translator} converts the Z3 model into a new \texttt{NFV} object (\texttt{root = result}), the graph with the same identifier is retrieved from the updated object. This is necessary because the \texttt{Translator} produces a fresh \texttt{NFV} instance, and \texttt{currentGraph} must point into that new instance rather than the old one.
+
+
+\subsection{Summary of Changes}
+
+In summary, the core changes to the original React-VEREFOO is the introduction of the iterative loop: instead of passing the full set of new requirements to React-VEREFOO in a single call, the execution is broken in multiple intermediate steps, each adding exactly one requirement at a time. Between steps, the graph and the set of enforced requirements are updated, so that each React-VEREFOO invocation builds on a valid and already verified configuration. All other components — \texttt{VerefooProxy}, the MaxSMT encoding, the \texttt{Translator} — remain unchaged.
+
+
+\section{Testing}
+
+\subsection{Test Overview}
+% - Obiettivo: confrontare tempo di esecuzione di React-VEREFOO iterativo vs VEREFOO vanilla
+% - Dataset utilizzati:
+%   - Stanford network: topologia reale di rete universitaria
+%   - Texas 2000: topologia sintetica di grandi dimensioni
+%   - CESNET: topologia reale di rete accademica europea
+% - Metrica principale: tempo di esecuzione totale
+% - Metriche secondarie: numero di firewall allocati, numero di regole generate (ottimalità)
+
+The experimental evaluation aims to assess the performance of the iterative approach against vanilla VEREFOO across different network topologies and NSR set sizes. The metric used is total execution time: the cumulative time required to reach a final valid configuration, including all intermediate React-VEREFOO invocations. Each test case was repeated over 20 runs, and the reported values represent the average over those runs.
+
+% todo: confermare con prof (vedi capitolo 6)s
+Evaluating additional metrics, such as the number of allocated firewall instances and the number of generated filtering rules, which would quantify any loss of global optimality introduced by the greedy sequential strategy, is left as a direction for future work.
+
+Three benchmark topologies are used, chosen to cover a spectrum from small real-world networks to large synthetic ones.
+
+\paragraph{Stanford.}
+% todo: add description of Stanford
+
+\paragraph{CESNET.}
+% todo: add description of CESNET
+
+\paragraph{Texas 2000.}
+% todo: add description of Texas 2000
+
+
+\subsection{Test Configurations}
+% - Variabili testate: dimensione della rete, numero di NSR, ordine degli NSR
+% - Configurazioni hardware/software utilizzate per i test
+% - Numero di ripetizioni per test, metodo di calcolo della media
+
+All three test classes invoke \texttt{VerefooSerializer} with the \texttt{react = true} flag and the Atomic Predicates (\texttt{AP}) algorithm. The vanilla baseline is obtained by invoking the single-argument constructor on the same input, without the iterative loop. The configurations differ in how the network topology and NSR set are generated.
+
+\paragraph{Stanford.}
+% todo: check value after final version of tests
+NSRs are generated synthetically on top of the Stanford topology using \texttt{TestCaseGeneratorStanford}. The test is parameterised by three values: the number of properties (\texttt{numberPRs}), the ratio of reachability and isolation requirements (\texttt{percentPairs}), and the fraction of port-specific rules (\texttt{portSpecifics}). In this thesis, \texttt{percentPairs} and \texttt{portSpecifics} are held constant at \texttt{\{0.5, 0.0\}} and \texttt{0.00} respectively across all test cases, while \texttt{numberPRs} varies over \{10, 20, 30, 40, 50, 60\}, producing six distinct NSR set sizes. Each configuration is executed 20 times, and the reported values are the averages over those runs.
+
+\paragraph{CESNET.}
+% todo: check value after final version of tests
+The CESNET topology is loaded via the \texttt{TestCaseGeneratorCesnet}. Unlike Stanford, the topology itself is fixed and only the NSR set varies across test cases. Isolation requirements are not bidirectional (\texttt{isolationBidirectional = false}) and port-level constraints are disabled (\texttt{usePorts = false}). The number of NSRs is increased progressively across test runs by raising \texttt{policyNumber}, with \texttt{reachabilityPerc = 0.5}, so that approximately half of the generated NSRs are reachability properties and the other half are isolation properties. Each configuration is executed 20 times.
+
+\paragraph{Texas 2000.}
+% todo: check value after final version of tests
+For the Texas~2000 topology, both the network graph and the NSR set are generated synthetically by \texttt{TestCaseGeneratorTexas2000}. The topology size is controlled by two parameters: \texttt{numberUCC} (???) and \texttt{numberSS} (???). The test iterates over six predefined \texttt{(UCC, SS)} pairs — \texttt{(1,3)}, \texttt{(2,6)}, \texttt{(3,9)}, \texttt{(4,12)}, \texttt{(5,15)}, \texttt{(6,18)} — corresponding to NSR counts of 48, 96, 144, 192, 240, and 288 respectively. The topology size as well as number of NSR is varied to assess its impact on performance. Each configuration is executed 20 times, and the reported values are the averages over those runs.
+
+% todo: to add table with configuration parameters for each test class showing the values used for each parameter
+
+Table~\ref{tab:test-configs} summarises the configuration parameters used in each test class, as read from the source code.
+
+
+\begin{table}[htbp]
+\centering
+\caption{Configuration parameters for each benchmark test class (values from source code).}
+\label{tab:test-configs}
+\begin{tabularx}{\textwidth}{lXXX}
+\hline
+\textbf{Parameter} & \textbf{Stanford} & \textbf{CESNET} & \textbf{Texas 2000} \\
+\hline
+Algorithm & AP & AP & AP \\
+Runs per config & 20 & 20 & 20 \\
+\texttt{percentPairs} / \texttt{reachabilityPerc} & \texttt{\{0.5, 0.0\}} & \texttt{0.5} & —\footnotemark \\
+NSR set sizes & 10, 20, 30, 40, 50, 60 & 20, 40, 60, 80, 100, 120 & 48, 96, 144, 192, 240, 288 \\
+\hline
+\end{tabularx}
+\end{table}
+\footnotetext{For Texas 2000, the ratio of reachability to isolation requirements is not a configurable parameter. The mix of isolation requirements and reachability properties emerges from the topology structure rather than from an explicit ratio setting.}
+
+\subsection{Results}
+% - Tabelle/grafici dei tempi di esecuzione per ogni dataset
+% - Andamento al crescere del numero di NSR
+% - Andamento al crescere della dimensione della rete
+
+
+% todo: aggiungere grafico con andamento dei tempi di esecuzione al crescere del numero di NSR
+Figure~\ref{fig:results_comparison} reports the average execution times measured across the three benchmark topologies. Each data point represents the mean over 20 runs. The Y-axis uses a logarithmic scale to accommodate the wide range of values observed, particularly for larger networks.
+
+
+\subsection{Comparison and Discussion}
+% todo: controllare con prof se aggiungere un paragrafo di discussione dei risultati, oppure rimandare al capitolo 6
+% - Iterativo vs monolitico: quando l'approccio iterativo è più veloce?
+% - Analisi della perdita di ottimalità (se presente): più firewall? più regole?
+% - Considerazioni su scalabilità
+% - Limiti dell'approccio iterativo

@@ -91,82 +91,232 @@ In summary, the core changes to the original React-VEREFOO is the introduction o
 
 \section{Testing}
 
-\subsection{Test Overview}
-% - Obiettivo: confrontare tempo di esecuzione di React-VEREFOO iterativo vs VEREFOO vanilla
-% - Dataset utilizzati:
-%   - Stanford network: topologia reale di rete universitaria
-%   - Texas 2000: topologia sintetica di grandi dimensioni
-%   - CESNET: topologia reale di rete accademica europea
-% - Metrica principale: tempo di esecuzione totale
-% - Metriche secondarie: numero di firewall allocati, numero di regole generate (ottimalità)
+\subsection{Qualitative Validation on CESNET}
+\label{sec:cesnet-validation}
 
-The experimental evaluation aims to assess the performance of the iterative approach against vanilla VEREFOO across different network topologies and NSR set sizes. The metric used is total execution time: the cumulative time required to reach a final valid configuration, including all intermediate React-VEREFOO invocations. Each test case was repeated over 20 runs, and the reported values represent the average over those runs.
+To validate the correctness of the iterative algorithm on a realistic topology, this section traces its execution step by step on the CESNET network — the Czech academic and research backbone shown in Figure~\ref{fig:cesnet-topology}. The trace is qualitative: NSRs and an initial firewall configuration are defined on the CESNET real topology, and each iteration of the algorithm is applied by hand to verify that (i) each new requirement is satisfied, and (ii) no previously satisfied requirement is broken. This mirrors the structure of the Worked Example in Chapter~\ref{chap:iterative}, applied to a real-world topology.
 
-% todo: confermare con prof (vedi capitolo 6)s
-Evaluating additional metrics, such as the number of allocated firewall instances and the number of generated filtering rules, which would quantify any loss of global optimality introduced by the greedy sequential strategy, is left as a direction for future work.
+\begin{figure}[H]
+    \centering
+    \hspace*{-0.05\textwidth}\includegraphics[width=1.1\textwidth]{images/topologies/Cesnet1.png}
+    \caption{CESNET backbone topology. Nodes represent Czech cities interconnected by high-speed academic links.}
+    \label{fig:cesnet-topology}
+\end{figure}
 
-Three benchmark topologies are used, chosen to cover a spectrum from small real-world networks to large synthetic ones.
+\subsubsection{Topology}
 
-\paragraph{Stanford.}
-% todo: add description of Stanford
+The topology used for this trace is the backbone of CESNET, the Czech National Research and Education Network, shown in Figure~\ref{fig:cesnet-topology}. As modeled here it consists of 23 nodes and 28 links connecting the country's main cities and research sites. Link capacities goes from 10~Mbit/s to 10~Gbit/s, reflecting a two-tier structure: a small set of high-capacity backbone links between major cities and lower-capacity links reaching smaller, peripheral sites. Praha acts as the central node having six direct neighbors; every other node is reached through one or more intermediate hops, and some destinations are reachable through more than one path.
 
-\paragraph{CESNET.}
-% todo: add description of CESNET
+\subsubsection{Initial Configuration ($P_0$)}
+This is a plausible test case constructed to exercise the iterative implementation, not an actual CESNET deployment: node names and the physical topology (links and capacities) are taken from the real network, but the reachability and isolation requirements are defined for this evaluation and do not reflect any real security policy in use on CESNET.
 
-\paragraph{Texas 2000.}
-% todo: add description of Texas 2000
+Ten initial NSRs are defined ($P_0$). Praha requires bidirectional reachability with Brno, Plzen, and Usti n.L. ($p_1$–$p_6$). Ostrava must not be able to reach Praha, Plzen, or Usti n.L. ($p_7$–$p_9$). Brno must not be able to reach Plzen ($p_{10}$). Table~\ref{tab:cesnet-initial} lists the ten requirements.
 
-
-\subsection{Test Configurations}
-% - Variabili testate: dimensione della rete, numero di NSR, ordine degli NSR
-% - Configurazioni hardware/software utilizzate per i test
-% - Numero di ripetizioni per test, metodo di calcolo della media
-
-All three test classes invoke \texttt{VerefooSerializer} with the \texttt{react = true} flag and the Atomic Predicates (\texttt{AP}) algorithm. The vanilla baseline is obtained by invoking the single-argument constructor on the same input, without the iterative loop. The configurations differ in how the network topology and NSR set are generated.
-
-\paragraph{Stanford.}
-% todo: check value after final version of tests
-NSRs are generated synthetically on top of the Stanford topology using \texttt{TestCaseGeneratorStanford}. The test is parameterised by three values: the number of properties (\texttt{numberPRs}), the ratio of reachability and isolation requirements (\texttt{percentPairs}), and the fraction of port-specific rules (\texttt{portSpecifics}). In this thesis, \texttt{percentPairs} and \texttt{portSpecifics} are held constant at \texttt{\{0.5, 0.0\}} and \texttt{0.00} respectively across all test cases, while \texttt{numberPRs} varies over \{10, 20, 30, 40, 50, 60\}, producing six distinct NSR set sizes. Each configuration is executed 20 times, and the reported values are the averages over those runs.
-
-\paragraph{CESNET.}
-% todo: check value after final version of tests
-The CESNET topology is loaded via the \texttt{TestCaseGeneratorCesnet}. Unlike Stanford, the topology itself is fixed and only the NSR set varies across test cases. Isolation requirements are not bidirectional (\texttt{isolationBidirectional = false}) and port-level constraints are disabled (\texttt{usePorts = false}). The number of NSRs is increased progressively across test runs by raising \texttt{policyNumber}, with \texttt{reachabilityPerc = 0.5}, so that approximately half of the generated NSRs are reachability properties and the other half are isolation properties. Each configuration is executed 20 times.
-
-\paragraph{Texas 2000.}
-% todo: check value after final version of tests
-For the Texas~2000 topology, both the network graph and the NSR set are generated synthetically by \texttt{TestCaseGeneratorTexas2000}. The topology size is controlled by two parameters: \texttt{numberUCC} (???) and \texttt{numberSS} (???). The test iterates over six predefined \texttt{(UCC, SS)} pairs — \texttt{(1,3)}, \texttt{(2,6)}, \texttt{(3,9)}, \texttt{(4,12)}, \texttt{(5,15)}, \texttt{(6,18)} — corresponding to NSR counts of 48, 96, 144, 192, 240, and 288 respectively. The topology size as well as number of NSR is varied to assess its impact on performance. Each configuration is executed 20 times, and the reported values are the averages over those runs.
-
-% todo: to add table with configuration parameters for each test class showing the values used for each parameter
-
-Table~\ref{tab:test-configs} summarises the configuration parameters used in each test class, as read from the source code.
-
-
-\begin{table}[htbp]
+\begin{table}[H]
 \centering
-\caption{Configuration parameters for each benchmark test class (values from source code).}
-\label{tab:test-configs}
-\begin{tabularx}{\textwidth}{lXXX}
+\caption{Initial NSR set $P_0$ (10 requirements already enforced).}
+\label{tab:cesnet-initial}
+\begin{tabular}{cccc}
 \hline
-\textbf{Parameter} & \textbf{Stanford} & \textbf{CESNET} & \textbf{Texas 2000} \\
+\textbf{ID} & \textbf{Source} & \textbf{Destination} & \textbf{Type} \\
 \hline
-Algorithm & AP & AP & AP \\
-Runs per config & 20 & 20 & 20 \\
-\texttt{percentPairs} / \texttt{reachabilityPerc} & \texttt{\{0.5, 0.0\}} & \texttt{0.5} & —\footnotemark \\
-NSR set sizes & 10, 20, 30, 40, 50, 60 & 20, 40, 60, 80, 100, 120 & 48, 96, 144, 192, 240, 288 \\
+$p_1$    & Praha   & Brno    & Reachability \\
+$p_2$    & Brno    & Praha   & Reachability \\
+$p_3$    & Praha   & Plzen   & Reachability \\
+$p_4$    & Plzen   & Praha   & Reachability \\
+$p_5$    & Praha   & Usti n.L. & Reachability \\
+$p_6$    & Usti n.L. & Praha   & Reachability \\
+$p_7$    & Ostrava & Praha   & Isolation \\
+$p_8$    & Ostrava & Plzen   & Isolation \\
+$p_9$    & Ostrava & Usti n.L. & Isolation \\
+$p_{10}$ & Brno    & Plzen   & Isolation \\
+\hline
+\end{tabular}
+\end{table}
+
+\paragraph{Firewall placement.}
+
+Based on the initial NSR set, React-VEREFOO is assumed to allocate six firewalls at the following Allocation Places:
+
+\begin{itemize}
+  \item $\mathit{FW}_1$ at $\mathit{AP}(\text{Praha},\text{Brno})$:\\
+        \texttt{ALLOW Praha $\to$ Brno} \hfill ($p_1$)\\
+        \texttt{ALLOW Brno $\to$ Praha} \hfill ($p_2$)\\
+        \texttt{default: DROP}
+
+  \item $\mathit{FW}_2$ at $\mathit{AP}(\text{Mar.Lazne},\text{Plzen})$:\\
+        \texttt{ALLOW Praha $\to$ Plzen} \hfill ($p_3$)\\
+        \texttt{ALLOW Plzen $\to$ Praha} \hfill ($p_4$)\\
+        \texttt{default: DROP}\\
+        ($\mathit{AP}(\text{Praha},\text{Mar.Lazne})$, one hop earlier, is left as a plain forwarder.)
+
+  \item $\mathit{FW}_3$ at $\mathit{AP}(\text{Praha},\text{Usti n.L.})$:\\
+        \texttt{ALLOW Praha $\to$ Usti n.L.} \hfill ($p_5$)\\
+        \texttt{ALLOW Usti n.L. $\to$ Praha} \hfill ($p_6$)\\
+        \texttt{default: DROP}
+
+  \item $\mathit{FW}_4$ at $\mathit{AP}(\text{C.Budejovice},\text{Plzen})$:\\
+        % \texttt{default: DROP} \hfill (Plzen's other egress link)
+
+  \item $\mathit{FW}_5$ at $\mathit{AP}(\text{Opava},\text{Ostrava})$:\\
+        % \texttt{default: DROP} \hfill (one of Ostrava's two egress links)
+
+  \item $\mathit{FW}_6$ at $\mathit{AP}(\text{Olomouc},\text{Ostrava})$:\\
+        % \texttt{default: DROP} \hfill (Ostrava's other egress link)
+\end{itemize}
+
+$\mathit{FW}_5$ and $\mathit{FW}_6$ isolate Ostrava from the rest of the network, satisfying $p_7$--$p_9$, while $p_{10}$ (Brno $\not\to$ Plzen) is enforced by $\mathit{FW}_4$ on the southern route and $\mathit{FW}_2$ on the northern route. The remaining four firewalls implement the bidirectional reachability requirements between Praha and its three neighbors.
+
+% todo: aggiungere schema semplificato che mostri solo il sottoinsieme di archi rilevanti per la traccia con gli AP e i firewall evidenziati
+
+\subsubsection{Incremental Additions}
+
+% todo: ripartire da qui con l'aggiornamento iterativo
+Five new NSRs are introduced (Table~\ref{tab:cesnet-new}): three reachability requirements — Kutna Hora to Praha, Pardubice to Kutna Hora, and Pardubice to Praha — one isolation requirement extending the Ostrava exclusion to Mar.Lazne, and one reachability requirement from Cheb to Plzen. For each iteration the algorithm computes $R_k$, $R_a$, and $R_d$ from \texttt{consideredProps} and \texttt{singleProp}, invokes React-VEREFOO, and updates the graph if SAT.
+
+\begin{table}[H]
+\centering
+\caption{New NSR batch $P_{\mathrm{new}}$ (5 requirements to be added iteratively).}
+\label{tab:cesnet-new}
+\begin{tabular}{cccc}
+\hline
+\textbf{ID} & \textbf{Source} & \textbf{Destination} & \textbf{Type} \\
+\hline
+$p_{11}$ & Kutna Hora & Praha      & Reachability \\
+$p_{12}$ & Pardubice  & Kutna Hora & Reachability \\
+$p_{13}$ & Pardubice  & Praha      & Reachability \\
+$p_{14}$ & Mar.Lazne  & Ostrava    & Isolation \\
+$p_{15}$ & Cheb       & Plzen      & Reachability \\
+\hline
+\end{tabular}
+\end{table}
+
+\paragraph{Iteration 1 — $p_{11}$: Kutna Hora $\to$ Praha (Reachability).}
+
+\begin{center}
+$R_k = P_0,\quad R_a = \{p_{11}\},\quad R_d = \emptyset$
+\end{center}
+
+Kutna Hora is a direct neighbor of Praha, but $\mathit{AP}(\text{Praha},\text{Kutna Hora})$ currently hosts no firewall (plain forwarder) — nothing in $P_0$ uses this link. React-VEREFOO allocates a new firewall:
+
+\smallskip
+$\mathit{FW}$ at $\mathit{AP}(\text{Praha},\text{Kutna Hora})$:\\
+\texttt{\textbf{ALLOW Kutna Hora $\to$ Praha}} \hfill ($p_{11}$, new)\\
+\texttt{default: DROP}
+\smallskip
+
+No existing firewall is modified; all $P_0$ requirements remain satisfied.\\
+\textbf{Result: SAT.} New firewall allocated.
+
+\paragraph{Iteration 2 — $p_{12}$: Pardubice $\to$ Kutna Hora (Reachability).}
+
+\begin{center}
+$R_k = P_0 \cup \{p_{11}\},\quad R_a = \{p_{12}\},\quad R_d = \emptyset$
+\end{center}
+
+Pardubice and Kutna Hora are directly connected; $\mathit{AP}(\text{Kutna Hora},\text{Pardubice})$ has no firewall yet. React-VEREFOO allocates:
+
+\smallskip
+$\mathit{FW}$ at $\mathit{AP}(\text{Kutna Hora},\text{Pardubice})$:\\
+\texttt{\textbf{ALLOW Pardubice $\to$ Kutna Hora}} \hfill ($p_{12}$, new)\\
+\texttt{default: DROP}
+\smallskip
+
+This does not interact with any $P_0$ requirement: Pardubice and Kutna Hora were previously disconnected from every NSR in the trace.\\
+\textbf{Result: SAT.} New firewall allocated.
+
+\paragraph{Iteration 3 — $p_{13}$: Pardubice $\to$ Praha (Reachability).}
+
+\begin{center}
+$R_k = P_0 \cup \{p_{11},p_{12}\},\quad R_a = \{p_{13}\},\quad R_d = \emptyset$
+\end{center}
+
+Traffic Pardubice $\to$ Praha follows the path \texttt{Pardubice–Kutna Hora–Praha}, crossing two existing firewalls in sequence. Neither currently has a rule for the Pardubice$\to$Praha traffic class (each only allows the single-hop class it was configured for in the previous two iterations). React-VEREFOO reconfigures both simultaneously:
+
+\smallskip
+$\mathit{FW}$ at $\mathit{AP}(\text{Kutna Hora},\text{Pardubice})$ updated:\\
+\texttt{ALLOW Pardubice $\to$ Kutna Hora} \hfill ($p_{12}$)\\
+\texttt{\textbf{ALLOW Pardubice $\to$ Praha}} \hfill ($p_{13}$, new — transit class)\\
+\texttt{default: DROP}
+
+\medskip
+$\mathit{FW}$ at $\mathit{AP}(\text{Praha},\text{Kutna Hora})$ updated:\\
+\texttt{ALLOW Kutna Hora $\to$ Praha} \hfill ($p_{11}$)\\
+\texttt{\textbf{ALLOW Pardubice $\to$ Praha}} \hfill ($p_{13}$, new)\\
+\texttt{default: DROP}
+\smallskip
+
+This new route does not touch Ostrava (still confined behind its two blocked egress links) or Brno, so $p_7$–$p_{10}$ are unaffected.\\
+\textbf{Result: SAT.} Two firewalls reconfigured.
+
+\paragraph{Iteration 4 — $p_{14}$: Mar.Lazne $\to$ Ostrava (Isolation).}
+
+\begin{center}
+$R_k = P_0 \cup \{p_{11},p_{12},p_{13}\},\quad R_a = \{p_{14}\},\quad R_d = \emptyset$
+\end{center}
+
+Any path from Mar.Lazne toward Ostrava must eventually cross $\mathit{AP}(\text{Opava},\text{Ostrava})$ or $\mathit{AP}(\text{Olomouc},\text{Ostrava})$ — the only two links entering Ostrava in the entire network. Both already default to DROP with no ALLOW rule for any origin. The requirement is therefore already satisfied, regardless of the route Mar.Lazne-originated traffic takes through the backbone.\\
+\textbf{Result: SAT, no change.}
+
+\paragraph{Iteration 5 — $p_{15}$: Cheb $\to$ Plzen (Reachability).}
+
+\begin{center}
+$R_k = P_0 \cup \{p_{11},p_{12},p_{13},p_{14}\},\quad R_a = \{p_{15}\},\quad R_d = \emptyset$
+\end{center}
+
+Traffic Cheb $\to$ Plzen follows the path \texttt{Cheb–Mar.Lazne–Plzen}, crossing $\mathit{FW}_2$ at $\mathit{AP}(\text{Mar.Lazne},\text{Plzen})$. $\mathit{FW}_2$ currently allows only the Praha$\to$Plzen traffic class; Cheb-originated traffic destined for Plzen has no matching rule and is dropped. React-VEREFOO reconfigures $\mathit{FW}_2$:
+
+\smallskip
+$\mathit{FW}_2$ updated ($\mathit{AP}(\text{Mar.Lazne},\text{Plzen})$):\\
+\texttt{ALLOW Praha $\to$ Plzen} \hfill ($p_3$)\\
+\texttt{ALLOW Plzen $\to$ Praha} \hfill ($p_4$)\\
+\texttt{\textbf{ALLOW Cheb $\to$ Plzen}} \hfill ($p_{15}$, new)\\
+\texttt{default: DROP}
+\smallskip
+
+This adds only the Cheb$\to$Plzen traffic class. Brno$\to$Plzen (the class $p_{10}$ isolates, on any route) still has no ALLOW rule at $\mathit{FW}_2$, nor at $\mathit{FW}_4$; $p_{10}$ is preserved.\\
+\textbf{Result: SAT.} $\mathit{FW}_2$ reconfigured.
+
+\subsubsection{Final Configuration Verification}
+
+After all five iterations, the network has eight firewalls: the six from $P_0$ ($\mathit{FW}_2$ additionally reconfigured during the trace) plus two newly allocated at $\mathit{AP}(\text{Praha},\text{Kutna Hora})$ and $\mathit{AP}(\text{Kutna Hora},\text{Pardubice})$. Table~\ref{tab:cesnet-verify} verifies each of the 15 requirements against the final configuration, confirming the invariant: at the end of every iteration, all requirements in \texttt{consideredProps} are simultaneously satisfied.
+
+\begin{table}[H]
+\centering
+\caption{Verification of all 15 NSRs against the final firewall configuration.}
+\label{tab:cesnet-verify}
+\begin{tabularx}{\textwidth}{clXl}
+\hline
+\textbf{ID} & \textbf{Type} & \textbf{Enforcement mechanism} & \textbf{AP} \\
+\hline
+$p_1$    & Reach. & ALLOW Praha $\to$ Brno                                     & $\mathit{FW}_1$ \\
+$p_2$    & Reach. & ALLOW Brno $\to$ Praha                                     & $\mathit{FW}_1$ \\
+$p_3$    & Reach. & ALLOW Praha $\to$ Plzen                                    & $\mathit{FW}_2$ \\
+$p_4$    & Reach. & ALLOW Plzen $\to$ Praha                                    & $\mathit{FW}_2$ \\
+$p_5$    & Reach. & ALLOW Praha $\to$ Usti n.L.                                & $\mathit{FW}_3$ \\
+$p_6$    & Reach. & ALLOW Usti n.L. $\to$ Praha                                & $\mathit{FW}_3$ \\
+$p_7$    & Isol.  & Ostrava's only two egress links default-drop every origin  & $\mathit{FW}_5$, $\mathit{FW}_6$ \\
+$p_8$    & Isol.  & Same: no path leaves Ostrava toward Plzen                  & $\mathit{FW}_5$, $\mathit{FW}_6$ \\
+$p_9$    & Isol.  & Same: no path leaves Ostrava toward Usti n.L.               & $\mathit{FW}_5$, $\mathit{FW}_6$ \\
+$p_{10}$ & Isol.  & Brno$\to$Plzen has no ALLOW at either of Plzen's two egress links, on any route & $\mathit{FW}_2$, $\mathit{FW}_4$ \\
+$p_{11}$ & Reach. & ALLOW Kutna Hora $\to$ Praha (added iter.~1)               & $\mathit{AP}(\text{Praha},\text{Kutna Hora})$ \\
+$p_{12}$ & Reach. & ALLOW Pardubice $\to$ Kutna Hora (added iter.~2)           & $\mathit{AP}(\text{Kutna Hora},\text{Pardubice})$ \\
+$p_{13}$ & Reach. & ALLOW Pardubice $\to$ Praha (added iter.~3)                & $\mathit{AP}(\text{Kutna Hora},\text{Pardubice})$, $\mathit{AP}(\text{Praha},\text{Kutna Hora})$ \\
+$p_{14}$ & Isol.  & Same as $p_7$–$p_9$: Ostrava unreachable from any origin   & $\mathit{FW}_5$, $\mathit{FW}_6$ \\
+$p_{15}$ & Reach. & ALLOW Cheb $\to$ Plzen (added iter.~5)                     & $\mathit{FW}_2$ \\
 \hline
 \end{tabularx}
 \end{table}
-\footnotetext{For Texas 2000, the ratio of reachability to isolation requirements is not a configurable parameter. The mix of isolation requirements and reachability properties emerges from the topology structure rather than from an explicit ratio setting.}
 
-\subsection{Results}
-% - Tabelle/grafici dei tempi di esecuzione per ogni dataset
-% - Andamento al crescere del numero di NSR
-% - Andamento al crescere della dimensione della rete
+\subsubsection{Discussion}
 
+The trace exhibits all three outcomes the iterative algorithm can produce for a single new NSR: allocating a new firewall on a previously uncontrolled link (iterations 1 and 2), reconfiguring one or more existing firewalls that already sit on the relevant path (iterations 3 and 5), and detecting that the current configuration already satisfies the requirement with no modification at all (iteration 4). Iteration 3 additionally shows that a single new NSR can require the \emph{simultaneous} reconfiguration of two firewalls along a multi-hop path, which React-VEREFOO resolves in one solver call rather than one call per affected link.
 
-% todo: aggiungere grafico con andamento dei tempi di esecuzione al crescere del numero di NSR
-Figure~\ref{fig:results_comparison} reports the average execution times measured across the three benchmark topologies. Each data point represents the mean over 20 runs. The Y-axis uses a logarithmic scale to accommodate the wide range of values observed, particularly for larger networks.
+The final count — eight firewalls for fifteen NSRs — also illustrates that placing firewalls at natural bottlenecks (Ostrava's two egress links, rather than every downstream convergence point) keeps the configuration compact even as the requirement set grows.
 
+More importantly, the verification table demonstrates the key correctness property: \emph{monotonic consistency}. Because each React-VEREFOO invocation receives the full set of already-enforced requirements as its initial state ($R_k$), the solver is constrained to produce a configuration that satisfies both old and new requirements simultaneously. No requirement satisfied at step $i$ can be violated at step $i+1$. This follows by induction: the base case ($P_0$ correctly enforced before the loop) holds by construction, and the inductive step is guaranteed by React-VEREFOO's correctness guarantee over $R_k$.
+
+\subsection{Test Overview}
 
 \subsection{Comparison and Discussion}
 % todo: controllare con prof se aggiungere un paragrafo di discussione dei risultati, oppure rimandare al capitolo 6
