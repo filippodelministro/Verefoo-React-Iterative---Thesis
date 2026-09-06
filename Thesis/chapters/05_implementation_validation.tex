@@ -30,6 +30,7 @@ Graph currentGraph = g;
 If the input \texttt{NFV} object contains a pre-existing set of already enforced requirements (\texttt{initialProp}), they are loaded into \texttt{consideredProps} at the start. This supports the general case in which the network already has a valid configuration before the first new NSR is introduced, corresponding to $P_0 \neq \emptyset$ in the algorithm description of Chapter~\ref{chap:iterative}.
 
 \subsection{Core change:  the Iterative Loop}
+\label{sec:iterative-loop}
 
 
 %todo: singleProp indica la lista delle targetProp; il nome vuole indicare che aggiungiamo una sola proprietà alla volta; cambiamo nome in targetProp?
@@ -94,7 +95,7 @@ In summary, the core changes to the original React-VEREFOO is the introduction o
 \subsection{Qualitative Validation on CESNET}
 \label{sec:cesnet-validation}
 
-To validate the correctness of the iterative algorithm on a realistic topology, this section traces its execution step by step on the CESNET network — the Czech academic and research backbone shown in Figure~\ref{fig:cesnet-topology}. The trace is qualitative: NSRs and an initial firewall configuration are defined on the CESNET real topology, and each iteration of the algorithm is applied by hand to verify that (i) each new requirement is satisfied, and (ii) no previously satisfied requirement is broken. This mirrors the structure of the Worked Example in Chapter~\ref{chap:iterative}, applied to a real-world topology.
+To validate the correctness of the iterative algorithm on a realistic topology, this section traces its execution step by step on the CESNET network — the Czech academic and research backbone shown in Figure~\ref{fig:cesnet-topology}. The test is qualitative: NSRs and an initial firewall configuration are defined on the CESNET real topology, and each iteration of the algorithm is applied by hand to verify that (i) each new requirement is satisfied, and (ii) no previously satisfied requirement is broken. This mirrors the structure of the Worked Example in Chapter~\ref{chap:iterative}, applied to a real-world topology.
 
 \begin{figure}[H]
     \centering
@@ -105,7 +106,7 @@ To validate the correctness of the iterative algorithm on a realistic topology, 
 
 \subsubsection{Topology}
 
-The topology used for this trace is the backbone of CESNET, the Czech National Research and Education Network, shown in Figure~\ref{fig:cesnet-topology}. As modeled here it consists of 23 nodes and 28 links connecting the country's main cities and research sites. Link capacities goes from 10~Mbit/s to 10~Gbit/s, reflecting a two-tier structure: a small set of high-capacity backbone links between major cities and lower-capacity links reaching smaller, peripheral sites. Praha acts as the central node having six direct neighbors; every other node is reached through one or more intermediate hops, and some destinations are reachable through more than one path.
+The topology used for this testing case is the backbone of CESNET, the Czech National Research and Education Network, shown in Figure~\ref{fig:cesnet-topology}. As modeled here it consists of 23 nodes and 28 links connecting the country's main cities and research sites. Link capacities goes from 10~Mbit/s to 10~Gbit/s, reflecting a two-tier structure: a small set of high-capacity backbone links between major cities and lower-capacity links reaching smaller, peripheral sites. Praha acts as the central node having six direct neighbors; every other node is reached through one or more intermediate hops, and some destinations are reachable through more than one path.
 
 \subsubsection{Initial Configuration ($P_0$)}
 This is a plausible test case constructed to exercise the iterative implementation, not an actual CESNET deployment: node names and the physical topology (links and capacities) are taken from the real network, but the reachability and isolation requirements are defined for this evaluation and do not reflect any real security policy in use on CESNET.
@@ -136,189 +137,190 @@ $p_{10}$ & Brno    & Plzen   & Isolation \\
 
 \paragraph{Firewall placement.}
 
-Based on the initial NSR set, React-VEREFOO is assumed to allocate six firewalls at the following Allocation Places:
+$P_0$ is the initial set of ten NSRs listed in Table~\ref{tab:cesnet-initial}. A single, monolithic run of vanilla VEREFOO over $P_0$ allocates four firewalls to satisfy it. Two of them isolate Ostrava, as required by $p_7$--$p_9$; the topology permits to allocate two single firewalls to isolate Ostrava: $\mathit{FW}_1$ on the northern route, while $\mathit{FW}_2$ on the Brno--Praha link blocks the southern route through Brno. The other two firewalls enforce $p_{10}$, the sole remaining isolation requirement, by guarding Plzen's two access links directly. The four firewalls are summarized below, followed by a more detailed walkthrough of each. All the reacheability requirements are satisfied by unguarded links, so no firewall is needed to enforce them.
 
 \begin{itemize}
-  \item $\mathit{FW}_1$ at $\mathit{AP}(\text{Praha},\text{Brno})$:\\
+  \item $\mathit{FW}_1$ at $\mathit{AP}(\text{Hradec Kralove},\text{Letohrad})$:\\
+        \texttt{default: DROP} \hfill ($p_7$, $p_8$, $p_9$)
+
+  \item $\mathit{FW}_2$ at $\mathit{AP}(\text{Brno},\text{Praha})$:\\
         \texttt{ALLOW Praha $\to$ Brno} \hfill ($p_1$)\\
         \texttt{ALLOW Brno $\to$ Praha} \hfill ($p_2$)\\
-        \texttt{default: DROP}
+        \texttt{default: DROP} \hfill ($p_7$, $p_8$, $p_9$)
 
-  \item $\mathit{FW}_2$ at $\mathit{AP}(\text{Mar.Lazne},\text{Plzen})$:\\
+  \item $\mathit{FW}_3$ at $\mathit{AP}(\text{Mar.Lazne},\text{Plzen})$:\\
         \texttt{ALLOW Praha $\to$ Plzen} \hfill ($p_3$)\\
         \texttt{ALLOW Plzen $\to$ Praha} \hfill ($p_4$)\\
-        \texttt{default: DROP}\\
-        ($\mathit{AP}(\text{Praha},\text{Mar.Lazne})$, one hop earlier, is left as a plain forwarder.)
-
-  \item $\mathit{FW}_3$ at $\mathit{AP}(\text{Praha},\text{Usti n.L.})$:\\
-        \texttt{ALLOW Praha $\to$ Usti n.L.} \hfill ($p_5$)\\
-        \texttt{ALLOW Usti n.L. $\to$ Praha} \hfill ($p_6$)\\
-        \texttt{default: DROP}
+        \texttt{default: DROP} \hfill (Plzen's first egress link; blocks $p_{10}$ on the direct and northern routes)
 
   \item $\mathit{FW}_4$ at $\mathit{AP}(\text{C.Budejovice},\text{Plzen})$:\\
-        % \texttt{default: DROP} \hfill (Plzen's other egress link)
-
-  \item $\mathit{FW}_5$ at $\mathit{AP}(\text{Opava},\text{Ostrava})$:\\
-        % \texttt{default: DROP} \hfill (one of Ostrava's two egress links)
-
-  \item $\mathit{FW}_6$ at $\mathit{AP}(\text{Olomouc},\text{Ostrava})$:\\
-        % \texttt{default: DROP} \hfill (Ostrava's other egress link)
+        \texttt{default: DROP} \hfill (Plzen's other egress link; blocks $p_{10}$ on the southern route)
 \end{itemize}
-
-$\mathit{FW}_5$ and $\mathit{FW}_6$ isolate Ostrava from the rest of the network, satisfying $p_7$--$p_9$, while $p_{10}$ (Brno $\not\to$ Plzen) is enforced by $\mathit{FW}_4$ on the southern route and $\mathit{FW}_2$ on the northern route. The remaining four firewalls implement the bidirectional reachability requirements between Praha and its three neighbors.
 
 % todo: aggiungere schema semplificato che mostri solo il sottoinsieme di archi rilevanti per la traccia con gli AP e i firewall evidenziati
 
 \subsubsection{Incremental Additions}
 
-% todo: ripartire da qui con l'aggiornamento iterativo
-Five new NSRs are introduced (Table~\ref{tab:cesnet-new}): three reachability requirements — Kutna Hora to Praha, Pardubice to Kutna Hora, and Pardubice to Praha — one isolation requirement extending the Ostrava exclusion to Mar.Lazne, and one reachability requirement from Cheb to Plzen. For each iteration the algorithm computes $R_k$, $R_a$, and $R_d$ from \texttt{consideredProps} and \texttt{singleProp}, invokes React-VEREFOO, and updates the graph if SAT.
+From this point on, every step is driven by Iterative React-VEREFOO logic (Chapter~\ref{chap:background}): Step 1 classifies each new NSR as a reachability or an isolation requirement. Step 2 then differs between the two requirement types: for a reachability requirement, it checks whether some flow already reaches the destination — if so, no further action is needed; otherwise, every node currently blocking that flow becomes eligible for reconfiguration. For an isolation requirement, it checks whether the flow is already blocked — if not, every node on the path becomes a candidate for reconfiguration. Step 3 then solves a MaxSMT problem restricted to the flagged candidates eligible for reconfiguration, reusing existing firewalls and rules wherever possible.
+% A direct consequence, which the trace below illustrates explicitly, is that \emph{only an isolation requirement on a still-uncontrolled path can trigger the allocation of a brand-new firewall} — a reachability requirement either finds its path already open (no change) or finds it already blocked by an existing firewall (reconfiguration), but never needs a firewall that does not yet exist.
+
+Five new NSRs are introduced and summerized in (Table~\ref{tab:cesnet-new}).
 
 \begin{table}[H]
 \centering
-\caption{New NSR batch $P_{\mathrm{new}}$ (5 requirements to be added iteratively).}
+\caption{5 additional requirements to be added iteratively.}
 \label{tab:cesnet-new}
 \begin{tabular}{cccc}
 \hline
 \textbf{ID} & \textbf{Source} & \textbf{Destination} & \textbf{Type} \\
 \hline
-$p_{11}$ & Kutna Hora & Praha      & Reachability \\
-$p_{12}$ & Pardubice  & Kutna Hora & Reachability \\
-$p_{13}$ & Pardubice  & Praha      & Reachability \\
-$p_{14}$ & Mar.Lazne  & Ostrava    & Isolation \\
-$p_{15}$ & Cheb       & Plzen      & Reachability \\
+$p_{11}$ & Podebrady & Usti n.L.  & Isolation \\
+$p_{12}$ & Tabor     & Pardubice  & Isolation \\
+$p_{13}$ & Opava     & Usti n.L.  & Reachability \\
+$p_{14}$ & Olomouc   & Praha      & Isolation \\
+$p_{15}$ & Tabor     & Usti n.L.  & Reachability \\
 \hline
 \end{tabular}
 \end{table}
 
-\paragraph{Iteration 1 — $p_{11}$: Kutna Hora $\to$ Praha (Reachability).}
+\paragraph{Iteration 1 — $p_{11}$: Podebrady $\not\to$ Usti n.L. (Isolation).}
 
 \begin{center}
 $R_k = P_0,\quad R_a = \{p_{11}\},\quad R_d = \emptyset$
 \end{center}
 
-Kutna Hora is a direct neighbor of Praha, but $\mathit{AP}(\text{Praha},\text{Kutna Hora})$ currently hosts no firewall (plain forwarder) — nothing in $P_0$ uses this link. React-VEREFOO allocates a new firewall:
+Traffic Podebrady $\to$ Usti n.L. would follow \texttt{Podebrady–Praha–Usti n.L.}. Nothing currently blocks it: both $\mathit{AP}(\text{Praha},\text{Podebrady})$ and $\mathit{AP}(\text{Praha},\text{Usti n.L.})$ are plain forwarders. Per Step 2, both links on the path become candidates Allocation Places for hosting the new isolation. The solver must choose one:
+\begin{itemize}
+  \item Placing the firewall at $\mathit{AP}(\text{Praha},\text{Usti n.L.})$ would also cut the Praha$\leftrightarrow$Usti n.L. traffic already enforced by $p_5$/$p_6$, requiring two compensating ALLOW rules in addition to the default DROP.
+  \item Instead, placing it at $\mathit{AP}(\text{Praha},\text{Podebrady})$ intercepts no other requirement and a simple default DROP rule appears sufficient.
+\end{itemize}
+Biased toward the minimal number of rules, React-VEREFOO allocates the cheaper option by choosing to allocate a new firewall at $\mathit{AP}(\text{Praha},\text{Podebrady})$:
 
 \smallskip
-$\mathit{FW}$ at $\mathit{AP}(\text{Praha},\text{Kutna Hora})$:\\
-\texttt{\textbf{ALLOW Kutna Hora $\to$ Praha}} \hfill ($p_{11}$, new)\\
-\texttt{default: DROP}
+$\mathit{FW}_5$ at $\mathit{AP}(\text{Praha},\text{Podebrady})$:\\
+\texttt{default: DROP} \hfill ($p_{11}$, new)
 \smallskip
 
-No existing firewall is modified; all $P_0$ requirements remain satisfied.\\
+No existing firewall is touched.\\
 \textbf{Result: SAT.} New firewall allocated.
 
-\paragraph{Iteration 2 — $p_{12}$: Pardubice $\to$ Kutna Hora (Reachability).}
+\paragraph{Iteration 2 — $p_{12}$: Tabor $\not\to$ Pardubice (Isolation).}
 
 \begin{center}
 $R_k = P_0 \cup \{p_{11}\},\quad R_a = \{p_{12}\},\quad R_d = \emptyset$
 \end{center}
 
-Pardubice and Kutna Hora are directly connected; $\mathit{AP}(\text{Kutna Hora},\text{Pardubice})$ has no firewall yet. React-VEREFOO allocates:
+Traffic Tabor $\to$ Pardubice would follow \texttt{Tabor–Praha–Pardubice}. Nothing currently blocks it: both $\mathit{AP}(\text{Praha},\text{Tabor})$ and $\mathit{AP}(\text{Praha},\text{Pardubice})$ are plain forwarders, and unlike iteration 1, none of them intercepts any other requirement in $R_k$. Per Step 2, both links become candidates for hosting the new isolation firewall and both would cost exactly the same: one default DROP rule. Nothing in the cost model favours one over the other. Let's assume React-VEREFOO settle the new firewall on $\mathit{AP}(\text{Praha},\text{Pardubice})$:
 
 \smallskip
-$\mathit{FW}$ at $\mathit{AP}(\text{Kutna Hora},\text{Pardubice})$:\\
-\texttt{\textbf{ALLOW Pardubice $\to$ Kutna Hora}} \hfill ($p_{12}$, new)\\
-\texttt{default: DROP}
+$\mathit{FW}_6$ at $\mathit{AP}(\text{Praha},\text{Pardubice})$:\\
+\texttt{default: DROP} \hfill ($p_{12}$, new)
 \smallskip
 
-This does not interact with any $P_0$ requirement: Pardubice and Kutna Hora were previously disconnected from every NSR in the trace.\\
+Section~\ref{sec:tie-breaking-closer-look} takes a closer look at this specific case: picking one Allocation Place over the other makes no difference to the cost of \emph{this} specific requirement, but, as shown there, it can change the cost of allocating new firewalls or configuring new rules for a later requirement.
+
 \textbf{Result: SAT.} New firewall allocated.
 
-\paragraph{Iteration 3 — $p_{13}$: Pardubice $\to$ Praha (Reachability).}
+\paragraph{Iteration 3 — $p_{13}$: Opava $\to$ Usti n.L. (Reachability).}
 
 \begin{center}
 $R_k = P_0 \cup \{p_{11},p_{12}\},\quad R_a = \{p_{13}\},\quad R_d = \emptyset$
 \end{center}
 
-Traffic Pardubice $\to$ Praha follows the path \texttt{Pardubice–Kutna Hora–Praha}, crossing two existing firewalls in sequence. Neither currently has a rule for the Pardubice$\to$Praha traffic class (each only allows the single-hop class it was configured for in the previous two iterations). React-VEREFOO reconfigures both simultaneously:
+Traffic from Opava toward Usti n.L. would follow \texttt{Opava–Letohrad–Hradec Kralove–Liberec–Usti n.L.}, crossing $\mathit{FW}_1$ at $\mathit{AP}(\text{Hradec Kralove},\text{Letohrad})$, which currently carries only a bare default DROP with no exceptions. The flow is blocked there, so $\mathit{FW}_1$ is the (only) candidate flagged by Step 2. This does not conflict with the standing isolation of Ostrava ($p_7$--$p_9$). React-VEREFOO reconfigures $\mathit{FW}_1$:
 
 \smallskip
-$\mathit{FW}$ at $\mathit{AP}(\text{Kutna Hora},\text{Pardubice})$ updated:\\
-\texttt{ALLOW Pardubice $\to$ Kutna Hora} \hfill ($p_{12}$)\\
-\texttt{\textbf{ALLOW Pardubice $\to$ Praha}} \hfill ($p_{13}$, new — transit class)\\
-\texttt{default: DROP}
-
-\medskip
-$\mathit{FW}$ at $\mathit{AP}(\text{Praha},\text{Kutna Hora})$ updated:\\
-\texttt{ALLOW Kutna Hora $\to$ Praha} \hfill ($p_{11}$)\\
-\texttt{\textbf{ALLOW Pardubice $\to$ Praha}} \hfill ($p_{13}$, new)\\
+$\mathit{FW}_1$ updated ($\mathit{AP}(\text{Hradec Kralove},\text{Letohrad})$):\\
+\texttt{\textbf{ALLOW Opava $\to$ Usti n.L.}} \hfill ($p_{13}$, new)\\
 \texttt{default: DROP}
 \smallskip
 
-This new route does not touch Ostrava (still confined behind its two blocked egress links) or Brno, so $p_7$–$p_{10}$ are unaffected.\\
-\textbf{Result: SAT.} Two firewalls reconfigured.
+Ostrava, Olomouc, and every other pair crossing this link still have no matching ALLOW rule, so $p_7$--$p_9$ remain fully enforced.\\
+\textbf{Result: SAT.} $\mathit{FW}_1$ reconfigured.
 
-\paragraph{Iteration 4 — $p_{14}$: Mar.Lazne $\to$ Ostrava (Isolation).}
+\paragraph{Iteration 4 — $p_{14}$: Olomouc $\not\to$ Praha (Isolation).}
 
 \begin{center}
 $R_k = P_0 \cup \{p_{11},p_{12},p_{13}\},\quad R_a = \{p_{14}\},\quad R_d = \emptyset$
 \end{center}
 
-Any path from Mar.Lazne toward Ostrava must eventually cross $\mathit{AP}(\text{Opava},\text{Ostrava})$ or $\mathit{AP}(\text{Olomouc},\text{Ostrava})$ — the only two links entering Ostrava in the entire network. Both already default to DROP with no ALLOW rule for any origin. The requirement is therefore already satisfied, regardless of the route Mar.Lazne-originated traffic takes through the backbone.\\
+Olomouc has two routes toward Praha: through $\mathit{FW}_1$ (via Letohrad and Hradec Kralove) and, indirectly, through $\mathit{FW}_2$ at $\mathit{AP}(\text{Brno},\text{Praha})$ (via Zlin and Brno). Neither firewall has an ALLOW rule matching this pair: $\mathit{FW}_1$'s only exception is $\text{Opava}\to\text{Usti n.L.}$ (added in iteration 3), and $\mathit{FW}_2$'s only exceptions are the compensating $\text{Praha}\leftrightarrow\text{Brno}$ rules for $p_1$/$p_2$ — Olomouc matches none of them. Both routes are therefore already blocked, and Step 2 finds nothing to reconfigure.\\
 \textbf{Result: SAT, no change.}
 
-\paragraph{Iteration 5 — $p_{15}$: Cheb $\to$ Plzen (Reachability).}
+\paragraph{Iteration 5 — $p_{15}$: Tabor $\to$ Usti n.L. (Reachability).}
 
 \begin{center}
 $R_k = P_0 \cup \{p_{11},p_{12},p_{13},p_{14}\},\quad R_a = \{p_{15}\},\quad R_d = \emptyset$
 \end{center}
 
-Traffic Cheb $\to$ Plzen follows the path \texttt{Cheb–Mar.Lazne–Plzen}, crossing $\mathit{FW}_2$ at $\mathit{AP}(\text{Mar.Lazne},\text{Plzen})$. $\mathit{FW}_2$ currently allows only the Praha$\to$Plzen traffic class; Cheb-originated traffic destined for Plzen has no matching rule and is dropped. React-VEREFOO reconfigures $\mathit{FW}_2$:
-
-\smallskip
-$\mathit{FW}_2$ updated ($\mathit{AP}(\text{Mar.Lazne},\text{Plzen})$):\\
-\texttt{ALLOW Praha $\to$ Plzen} \hfill ($p_3$)\\
-\texttt{ALLOW Plzen $\to$ Praha} \hfill ($p_4$)\\
-\texttt{\textbf{ALLOW Cheb $\to$ Plzen}} \hfill ($p_{15}$, new)\\
-\texttt{default: DROP}
-\smallskip
-
-This adds only the Cheb$\to$Plzen traffic class. Brno$\to$Plzen (the class $p_{10}$ isolates, on any route) still has no ALLOW rule at $\mathit{FW}_2$, nor at $\mathit{FW}_4$; $p_{10}$ is preserved.\\
-\textbf{Result: SAT.} $\mathit{FW}_2$ reconfigured.
+Traffic Tabor $\to$ Usti n.L. would follow \texttt{Tabor–Praha–Usti n.L.}. Both links are still plain forwarders: $\mathit{AP}(\text{Praha},\text{Tabor})$ was left untouched by iteration 2, and $\mathit{AP}(\text{Praha},\text{Usti n.L.})$ has carried no firewall since $P_0$. The entire path is already open, so the requirement is satisfied without any change at zero cost.\\
+\textbf{Result: SAT, no change.} This outcome is a direct consequence of the specific way iteration 2 was resolved. Section~\ref{sec:tie-breaking-closer-look} examines the case closely and shows that having chosen the alternative path, this requirement would have required a reconfiguration instead of being satisfied for free.
 
 \subsubsection{Final Configuration Verification}
 
-After all five iterations, the network has eight firewalls: the six from $P_0$ ($\mathit{FW}_2$ additionally reconfigured during the trace) plus two newly allocated at $\mathit{AP}(\text{Praha},\text{Kutna Hora})$ and $\mathit{AP}(\text{Kutna Hora},\text{Pardubice})$. Table~\ref{tab:cesnet-verify} verifies each of the 15 requirements against the final configuration, confirming the invariant: at the end of every iteration, all requirements in \texttt{consideredProps} are simultaneously satisfied.
+All five new NSRs were successfully incorporated. The network ends with six firewalls: the four from $P_0$ ($\mathit{FW}_1$ reconfigured in iteration 3) plus $\mathit{FW}_5$ and $\mathit{FW}_6$, newly allocated at $\mathit{AP}(\text{Praha},\text{Podebrady})$ and $\mathit{AP}(\text{Praha},\text{Pardubice})$ respectively. $\mathit{AP}(\text{Praha},\text{Tabor})$ and $\mathit{AP}(\text{Praha},\text{Usti n.L.})$ remain unguarded forwarders. Table~\ref{tab:cesnet-verify} verifies each of the 15 enforced requirements against the final configuration: at the end of every iteration, all requirements in \texttt{consideredProps} are simultaneously satisfied.
 
 \begin{table}[H]
 \centering
 \caption{Verification of all 15 NSRs against the final firewall configuration.}
 \label{tab:cesnet-verify}
-\begin{tabularx}{\textwidth}{clXl}
+\begin{tabularx}{\textwidth}{cllcXl}
 \hline
-\textbf{ID} & \textbf{Type} & \textbf{Enforcement mechanism} & \textbf{AP} \\
+\textbf{ID} & \textbf{Src} & \textbf{Dst} & \textbf{Type} & \textbf{Enforcement mechanism} & \textbf{FW} \\
 \hline
-$p_1$    & Reach. & ALLOW Praha $\to$ Brno                                     & $\mathit{FW}_1$ \\
-$p_2$    & Reach. & ALLOW Brno $\to$ Praha                                     & $\mathit{FW}_1$ \\
-$p_3$    & Reach. & ALLOW Praha $\to$ Plzen                                    & $\mathit{FW}_2$ \\
-$p_4$    & Reach. & ALLOW Plzen $\to$ Praha                                    & $\mathit{FW}_2$ \\
-$p_5$    & Reach. & ALLOW Praha $\to$ Usti n.L.                                & $\mathit{FW}_3$ \\
-$p_6$    & Reach. & ALLOW Usti n.L. $\to$ Praha                                & $\mathit{FW}_3$ \\
-$p_7$    & Isol.  & Ostrava's only two egress links default-drop every origin  & $\mathit{FW}_5$, $\mathit{FW}_6$ \\
-$p_8$    & Isol.  & Same: no path leaves Ostrava toward Plzen                  & $\mathit{FW}_5$, $\mathit{FW}_6$ \\
-$p_9$    & Isol.  & Same: no path leaves Ostrava toward Usti n.L.               & $\mathit{FW}_5$, $\mathit{FW}_6$ \\
-$p_{10}$ & Isol.  & Brno$\to$Plzen has no ALLOW at either of Plzen's two egress links, on any route & $\mathit{FW}_2$, $\mathit{FW}_4$ \\
-$p_{11}$ & Reach. & ALLOW Kutna Hora $\to$ Praha (added iter.~1)               & $\mathit{AP}(\text{Praha},\text{Kutna Hora})$ \\
-$p_{12}$ & Reach. & ALLOW Pardubice $\to$ Kutna Hora (added iter.~2)           & $\mathit{AP}(\text{Kutna Hora},\text{Pardubice})$ \\
-$p_{13}$ & Reach. & ALLOW Pardubice $\to$ Praha (added iter.~3)                & $\mathit{AP}(\text{Kutna Hora},\text{Pardubice})$, $\mathit{AP}(\text{Praha},\text{Kutna Hora})$ \\
-$p_{14}$ & Isol.  & Same as $p_7$–$p_9$: Ostrava unreachable from any origin   & $\mathit{FW}_5$, $\mathit{FW}_6$ \\
-$p_{15}$ & Reach. & ALLOW Cheb $\to$ Plzen (added iter.~5)                     & $\mathit{FW}_2$ \\
+$p_1$    & Praha     & Brno      & Reach. & ALLOW Praha $\to$ Brno                                     & $\mathit{FW}_2$ \\
+$p_2$    & Brno      & Praha     & Reach. & ALLOW Brno $\to$ Praha                                     & $\mathit{FW}_2$ \\
+$p_3$    & Praha     & Plzen     & Reach. & ALLOW Praha $\to$ Plzen                                    & $\mathit{FW}_3$ \\
+$p_4$    & Plzen     & Praha     & Reach. & ALLOW Plzen $\to$ Praha                                    & $\mathit{FW}_3$ \\
+$p_5$    & Praha     & Usti n.L. & Reach. & Unfiltered link (no firewall needed)                       & — \\
+$p_6$    & Usti n.L. & Praha     & Reach. & Unfiltered link (no firewall needed)                       & — \\
+$p_7$    & Ostrava   & Praha     & Isol.  & Both routes out of Ostrava default-drop every origin       & $\mathit{FW}_1$, $\mathit{FW}_2$ \\
+$p_8$    & Ostrava   & Plzen     & Isol.  & Same: no path leaves Ostrava toward Plzen                  & $\mathit{FW}_1$, $\mathit{FW}_2$ \\
+$p_9$    & Ostrava   & Usti n.L. & Isol.  & Same: no path leaves Ostrava toward Usti n.L.               & $\mathit{FW}_1$, $\mathit{FW}_2$ \\
+$p_{10}$ & Brno      & Plzen     & Isol.  & Brno$\to$Plzen has no ALLOW at either of Plzen's two egress links, on any route & $\mathit{FW}_3$, $\mathit{FW}_4$ \\
+$p_{11}$ & Podebrady & Usti n.L. & Isol.  & Podebrady$\to$Usti n.L. has no ALLOW rule at $\mathit{FW}_5$ & $\mathit{FW}_5$ \\
+$p_{12}$ & Tabor     & Pardubice & Isol.  & Tabor$\to$Pardubice has no ALLOW rule at $\mathit{FW}_6$    & $\mathit{FW}_6$ \\
+$p_{13}$ & Opava     & Usti n.L. & Reach. & ALLOW Opava $\to$ Usti n.L. (added iter.~3)                & $\mathit{FW}_1$ \\
+$p_{14}$ & Olomouc   & Praha     & Isol.  & Olomouc$\to$Praha has no ALLOW rule at either $\mathit{FW}_1$ or $\mathit{FW}_2$ & $\mathit{FW}_1$, $\mathit{FW}_2$ \\
+$p_{15}$ & Tabor     & Usti n.L. & Reach. & Unfiltered link (no firewall needed)                       & — \\
 \hline
 \end{tabularx}
 \end{table}
 
+% todo: aggiungere schema che mostri la topologia aggiornata con i sei firewall e i percorsi dei quindici NSR, evidenziando i percorsi bloccati e quelli aperti
+
 \subsubsection{Discussion}
 
-The trace exhibits all three outcomes the iterative algorithm can produce for a single new NSR: allocating a new firewall on a previously uncontrolled link (iterations 1 and 2), reconfiguring one or more existing firewalls that already sit on the relevant path (iterations 3 and 5), and detecting that the current configuration already satisfies the requirement with no modification at all (iteration 4). Iteration 3 additionally shows that a single new NSR can require the \emph{simultaneous} reconfiguration of two firewalls along a multi-hop path, which React-VEREFOO resolves in one solver call rather than one call per affected link.
 
-The final count — eight firewalls for fifteen NSRs — also illustrates that placing firewalls at natural bottlenecks (Ostrava's two egress links, rather than every downstream convergence point) keeps the configuration compact even as the requirement set grows.
+The clearest takeaway, already visible in $P_0$, is that the \emph{type} of NSR — reachability or isolation — is what really drives the outcome of the algorithm: the two types make it iterate in completely different ways. An unguarded Allocation Place filters nothing, so a reachability requirement can only ever find its path already open (as in iteration 5) or already blocked by an existing firewall (reconfiguration in iteration 3), but will never justify allocating a new firewall. An isolation requirement, instead, can force a genuinely new allocation, since something must start blocking traffic where nothing did before (iterations 1 and 2); but it can just as well find every path already closed by firewalls allocated for earlier requirements, needing no change at all (iteration 4). This asymmetry — reachability at most reconfiguring an existing firewall, isolation possibly allocating a new one — is itself a consequence of the \textit{whitelisting} mode chosen for this testing case (Chapter~\ref{chap:background}).
 
-More importantly, the verification table demonstrates the key correctness property: \emph{monotonic consistency}. Because each React-VEREFOO invocation receives the full set of already-enforced requirements as its initial state ($R_k$), the solver is constrained to produce a configuration that satisfies both old and new requirements simultaneously. No requirement satisfied at step $i$ can be violated at step $i+1$. This follows by induction: the base case ($P_0$ correctly enforced before the loop) holds by construction, and the inductive step is guaranteed by React-VEREFOO's correctness guarantee over $R_k$.
+Iterations 1 and 2 both allocate a new firewall for an isolation requirement, but for structurally different reasons. In iteration 1 the two candidates have different cost — one is free, the other would break an existing reachability requirement — so the cheaper option is the clear choice. In iteration 2 the two candidates are perfectly symmetric: neither Tabor nor Pardubice appears anywhere else in the NSR set, so both cost exactly one default DROP rule. This is a true tie, and the specific choice made here — $\mathit{AP}(\text{Praha},\text{Pardubice})$ over $\mathit{AP}(\text{Praha},\text{Tabor})$ — turns out to matter later: it is precisely what leaves $\mathit{AP}(\text{Praha},\text{Tabor})$ open for iteration 5 to exploit at zero cost. Section~\ref{sec:tie-breaking-closer-look} explores this dependency in detail showing how the choice could potentially affects subsequent iterations.
 
-\subsection{Test Overview}
+The final count — six firewalls enforcing all fifteen requested NSRs, with $p_5$, $p_6$, and $p_{15}$ still enforced by no firewall at all — illustrates that VEREFOO's optimality objective keeps the configuration compact by allocating only where traffic must actually be blocked, and that this compactness persists even as new isolation requirements are introduced over time. Together with the step-by-step verification carried out at each iteration, this confirms that the requirements introduced during the incremental phase were correctly enforced, without disrupting anything already in place.
 
-\subsection{Comparison and Discussion}
+\subsection{A Closer Look: Tie-Breaking and flow analsysis}
+\label{sec:tie-breaking-closer-look}
+
+\paragraph{Introduction.}
+
+This section studies one specific case from the test example above to illustrate a real dynamic that is worth considering for future work on the topic. When React-VEREFOO must allocate a new firewall to satisfy a requirement, two or more Allocation Places can turn out to be equally costly. In such cases, choosing one AP over another has no immediate impact on the cost of satisfying the current requirement, but, as shown below, it can still affect how future iterations play out. This suggests that future implementations of the tool could take traffic flow analysis into account, in order to decide which NSR to enforce first and obtain the satisfaction of later NSRs at lower cost.
+
+
+\paragraph{The case.}
+% todo: riportare figura nel dettaglio di entrambe le opzioni disponibili per dare contesto
+Iteration 2's tie between $\mathit{AP}(\text{Praha},\text{Tabor})$ and $\mathit{AP}(\text{Praha},\text{Pardubice})$ is worth revisiting in details, because the two resolutions lead to visibly different outcomes especially for iteration 5. The two options are equivalent in terms of cost for $p_{12}$, but they differ in how they affect the reachability of Tabor $\to$ Usti n.L. when $p_{15}$ is later introduced. The two cases are summarized below.
+
+\paragraph{Case (a): the firewall is placed at $\mathit{AP}(\text{Praha},\text{Pardubice})$.} This is the resolution followed by the main trace above. $\mathit{AP}(\text{Praha},\text{Tabor})$ is left untouched, and when $p_{15}$ (Tabor $\to$ Usti n.L.) is introduced in iteration 5, its entire path is already open: the requirement is satisfied at zero cost, with no reconfiguration at all.
+
+\paragraph{Case (b): the firewall is placed at $\mathit{AP}(\text{Praha},\text{Tabor})$ instead.} In this alternative scenario however, allocating the new firewall enforced by $p_{12}$ at $\mathit{AP}(\text{Praha},\text{Tabor})$ would block every flow originating at Tabor, including the Tabor $\to$ Usti n.L. flow that $p_{15}$ will later request as reacheable. According to this, Step 2 of iteration 5 would find the Tabor $\to$ Usti n.L. flow already blocked by this same firewall, and the only candidate for reconfiguration would be the firewall itself: React-VEREFOO would add \texttt{ALLOW Tabor $\to$ Usti n.L.} to it. The requirement would still be satisfied — correctness is unaffected either way — but through a reconfiguration rather than a free pass.
+
+\paragraph{Discussion}
+
+The consideration worth mentioning is that both choices are valid and correct, but one (a) achieves the result at zero cost, while the other (b) requires a reconfiguration. Although minimal in this example, this is an illustrative case of how a tie-break decision can have consequences on the cost of satisfying future NSRs. $p_{12}$ itself is satisfied at identical cost either way, and the choice between the two candidates is left the implementation of React-Verefoo with no visibility into future NSRs — which is exactly why the two cases only diverge later, in $p_{15}$, a requirement that does not even exist yet at the time the tie is resolved.
+
+This observation points to a natural extension of the approach that falls outside the scope of this thesis: a \emph{traffic-aware} strategy may be considered for future work, applied before listing the NSRs and presenting them to the iterative version of React-VEREFOO, aiming to classify NSRs by their traffic flows and order them across iterations so as to minimize the number of future reconfigurations.
+
+\subsection{Discussion and Limitations}
 % todo: controllare con prof se aggiungere un paragrafo di discussione dei risultati, oppure rimandare al capitolo 6
 % - Iterativo vs monolitico: quando l'approccio iterativo è più veloce?
 % - Analisi della perdita di ottimalità (se presente): più firewall? più regole?
