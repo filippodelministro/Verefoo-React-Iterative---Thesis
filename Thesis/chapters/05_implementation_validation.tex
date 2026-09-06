@@ -151,10 +151,10 @@ $P_0$ is the initial set of ten NSRs listed in Table~\ref{tab:cesnet-initial}. A
   \item $\mathit{FW}_3$ at $\mathit{AP}(\text{Mar.Lazne},\text{Plzen})$:\\
         \texttt{ALLOW Praha $\to$ Plzen} \hfill ($p_3$)\\
         \texttt{ALLOW Plzen $\to$ Praha} \hfill ($p_4$)\\
-        \texttt{default: DROP} \hfill (Plzen's first egress link; blocks $p_{10}$ on the direct and northern routes)
+        \texttt{default: DROP} \hfill ($p_{10}$)
 
   \item $\mathit{FW}_4$ at $\mathit{AP}(\text{C.Budejovice},\text{Plzen})$:\\
-        \texttt{default: DROP} \hfill (Plzen's other egress link; blocks $p_{10}$ on the southern route)
+        \texttt{default: DROP} \hfill ($p_{10}$ on the southern route)
 \end{itemize}
 
 % todo: aggiungere schema semplificato che mostri solo il sottoinsieme di archi rilevanti per la traccia con gli AP e i firewall evidenziati
@@ -264,25 +264,25 @@ All five new NSRs were successfully incorporated. The network ends with six fire
 \centering
 \caption{Verification of all 15 NSRs against the final firewall configuration.}
 \label{tab:cesnet-verify}
-\begin{tabularx}{\textwidth}{cllcXl}
+\begin{tabularx}{\textwidth}{clXl}
 \hline
-\textbf{ID} & \textbf{Src} & \textbf{Dst} & \textbf{Type} & \textbf{Enforcement mechanism} & \textbf{FW} \\
+\textbf{ID} & \textbf{Type} & \textbf{Enforcement mechanism} & \textbf{FW} \\
 \hline
-$p_1$    & Praha     & Brno      & Reach. & ALLOW Praha $\to$ Brno                                     & $\mathit{FW}_2$ \\
-$p_2$    & Brno      & Praha     & Reach. & ALLOW Brno $\to$ Praha                                     & $\mathit{FW}_2$ \\
-$p_3$    & Praha     & Plzen     & Reach. & ALLOW Praha $\to$ Plzen                                    & $\mathit{FW}_3$ \\
-$p_4$    & Plzen     & Praha     & Reach. & ALLOW Plzen $\to$ Praha                                    & $\mathit{FW}_3$ \\
-$p_5$    & Praha     & Usti n.L. & Reach. & Unfiltered link (no firewall needed)                       & — \\
-$p_6$    & Usti n.L. & Praha     & Reach. & Unfiltered link (no firewall needed)                       & — \\
-$p_7$    & Ostrava   & Praha     & Isol.  & Every route out of Ostrava is default-dropped, including the Jihlava detour & $\mathit{FW}_1$, $\mathit{FW}_2$, $\mathit{FW}_4$ \\
-$p_8$    & Ostrava   & Plzen     & Isol.  & Same: no path leaves Ostrava toward Plzen                  & $\mathit{FW}_1$, $\mathit{FW}_2$, $\mathit{FW}_4$ \\
-$p_9$    & Ostrava   & Usti n.L. & Isol.  & Same: no path leaves Ostrava toward Usti n.L.               & $\mathit{FW}_1$, $\mathit{FW}_2$, $\mathit{FW}_4$ \\
-$p_{10}$ & Brno      & Plzen     & Isol.  & Brno$\to$Plzen has no ALLOW at either of Plzen's two egress links, on any route & $\mathit{FW}_3$, $\mathit{FW}_4$ \\
-$p_{11}$ & Podebrady & Usti n.L. & Isol.  & Podebrady$\to$Usti n.L. has no ALLOW rule at $\mathit{FW}_5$ & $\mathit{FW}_5$ \\
-$p_{12}$ & Tabor     & Pardubice & Isol.  & Tabor$\to$Pardubice has no ALLOW rule at $\mathit{FW}_6$    & $\mathit{FW}_6$ \\
-$p_{13}$ & Opava     & Usti n.L. & Reach. & ALLOW Opava $\to$ Usti n.L. (added iter.~3)                & $\mathit{FW}_1$ \\
-$p_{14}$ & Olomouc   & Praha     & Isol.  & Olomouc$\to$Praha has no ALLOW rule at either $\mathit{FW}_1$ or $\mathit{FW}_2$ & $\mathit{FW}_1$, $\mathit{FW}_2$ \\
-$p_{15}$ & Tabor     & Usti n.L. & Reach. & Unfiltered link (no firewall needed)                       & — \\
+$p_1$    & Reach. & ALLOW Praha $\to$ Brno                                     & $\mathit{FW}_2$ \\
+$p_2$    & Reach. & ALLOW Brno $\to$ Praha                                     & $\mathit{FW}_2$ \\
+$p_3$    & Reach. & ALLOW Praha $\to$ Plzen                                    & $\mathit{FW}_3$ \\
+$p_4$    & Reach. & ALLOW Plzen $\to$ Praha                                    & $\mathit{FW}_3$ \\
+$p_5$    & Reach. & Unfiltered link (no firewall needed)                       & — \\
+$p_6$    & Reach. & Unfiltered link (no firewall needed)                       & — \\
+$p_7$    & Isol.  & DROP by default on every route out of Ostrava              & $\mathit{FW}_1$, $\mathit{FW}_2$, $\mathit{FW}_4$ \\
+$p_8$    & Isol.  & DROP by default on every route out of Ostrava              & $\mathit{FW}_1$, $\mathit{FW}_2$, $\mathit{FW}_4$ \\
+$p_9$    & Isol.  & DROP by default on every route out of Ostrava              & $\mathit{FW}_1$, $\mathit{FW}_2$, $\mathit{FW}_4$ \\
+$p_{10}$ & Isol.  & DROP by default on both of Plzen's egress links            & $\mathit{FW}_3$, $\mathit{FW}_4$ \\
+$p_{11}$ & Isol.  & (iteration 1) DROP by default at $\mathit{FW}_5$           & $\mathit{FW}_5$ \\
+$p_{12}$ & Isol.  & (iteration 2) DROP by default at $\mathit{FW}_6$           & $\mathit{FW}_6$ \\
+$p_{13}$ & Reach. & (iteration 3) ALLOW Opava $\to$ Usti n.L.                  & $\mathit{FW}_1$ \\
+$p_{14}$ & Isol.  & (iteration 4) DROP by default on both routes from Olomouc & $\mathit{FW}_1$, $\mathit{FW}_2$, $\mathit{FW}_4$ \\
+$p_{15}$ & Reach. & Unfiltered link (no firewall needed)                       & — \\
 \hline
 \end{tabularx}
 \end{table}
