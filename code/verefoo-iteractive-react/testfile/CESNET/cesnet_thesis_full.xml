@@ -3,16 +3,7 @@
 	xsi:noNamespaceSchemaLocation="../../xsd/nfvSchema.xsd">
 	<graphs>
 		<graph id="0">
-			<!-- CESNET topology, rebuilt to match the thesis's "Allocation Place per edge" model:
-			     - Every real CESNET router (10.0.0.1-23) is LOCKED as functional_type="FORWARDER":
-			       it can never become a firewall, exactly like a fixed network device.
-			     - Every one of the 28 backbone links gets its own dedicated, untyped intermediate
-			       node (30.0.0.1-28) = the actual "Allocation Place" for that edge. Only these 28
-			       nodes are eligible firewall candidates, one per edge, matching Chapter 2's model.
-			     - The 10 WEBCLIENT hosts (20.0.0.1-10) are unchanged, attached directly to their
-			       router (host-access links are not part of the AP model). -->
-
-			<!-- ===== Routers (locked, FORWARDER) ===== -->
+			<!-- ===== Routers (FORWARDER) ===== -->
 			<node functional_type="FORWARDER" name="10.0.0.1"> <!-- Praha -->
 				<neighbour name="30.0.0.1" /> <!-- AP Praha-Brno -->
 				<neighbour name="30.0.0.2" /> <!-- AP Praha-MarLazne -->
@@ -195,7 +186,7 @@
 				</configuration>
 			</node>
 
-			<!-- ===== Allocation Places: one untyped node per edge (30.0.0.1-28) ===== -->
+			<!-- ===== Allocation Places ===== -->
 			<node name="30.0.0.1"> <!-- AP Praha-Brno -->
 				<neighbour name="10.0.0.1" />
 				<neighbour name="10.0.0.2" />
@@ -309,7 +300,7 @@
 				<neighbour name="10.0.0.23" />
 			</node>
 
-			<!-- ===== Traffic endpoints: one WEBCLIENT leaf host per location used as a Property src/dst ===== -->
+			<!-- ===== End-points: WEBCLIENT ===== -->
 			<node functional_type="WEBCLIENT" name="20.0.0.1"> <!-- host @ Praha -->
 				<neighbour name="10.0.0.1" />
 			</node>
