@@ -321,8 +321,39 @@ The consideration worth mentioning is that both choices are valid and correct, b
 This observation points to a natural extension of the approach that falls outside the scope of this thesis: a \emph{traffic-aware} strategy may be considered for future work, applied before listing the NSRs and presenting them to the iterative version of React-VEREFOO, aiming to classify NSRs by their traffic flows and order them across iterations so as to minimize the number of future reconfigurations.
 
 \subsection{Discussion and Limitations}
-% todo: controllare con prof se aggiungere un paragrafo di discussione dei risultati, oppure rimandare al capitolo 6
-% - Iterativo vs monolitico: quando l'approccio iterativo è più veloce?
-% - Analisi della perdita di ottimalità (se presente): più firewall? più regole?
-% - Considerazioni su scalabilità
-% - Limiti dell'approccio iterativo
+\label{sec:discussion-limitations}
+
+\paragraph{A monolithic benchmark.} To put the iterative result in context, vanilla VEREFOO was also run once, monolithically, on the very same CESNET topology and the complete set of fifteen NSRs — the ten of $P_0$ together with the five introduced across the incremental phase — handed to the solver all at once instead of one at a time. The topology was modeled with the same conventions used throughout this validation: every router is a fixed forwarder, never itself a candidate for allocation, and each of the 28 links carries its own dedicated, unguarded Allocation Place, exactly as in the iterative trace. This ensures the comparison isolates the effect of \emph{when} the solver sees the requirements — all at once versus one at a time — rather than any difference in what a firewall is allowed to filter or where it is allowed to sit.
+
+The monolithic run is SAT, and it satisfies all fifteen requirements with five firewalls, one fewer than the six produced iteratively. Table~\ref{tab:cesnet-monolithic} summarizes the result.
+
+\begin{table}[H]
+\centering
+\caption{Firewalls allocated by a single, monolithic run of vanilla VEREFOO over all 15 NSRs.}
+\label{tab:cesnet-monolithic}
+\begin{tabularx}{\textwidth}{clXl}
+\hline
+\textbf{Firewall} & \textbf{Allocation Place} & \textbf{Enforcement mechanism} & \textbf{NSRs covered} \\
+\hline
+$\mathit{FW}^{M}_1$ & $\mathit{AP}(\text{Praha},\text{Brno})$      & DROP by default; ALLOW Praha $\leftrightarrow$ Brno            & $p_1$, $p_2$ \\
+$\mathit{FW}^{M}_2$ & $\mathit{AP}(\text{Praha},\text{Podebrady})$ & DROP by default, no exceptions                                 & $p_{11}$ \\
+$\mathit{FW}^{M}_3$ & $\mathit{AP}(\text{Praha},\text{Pardubice})$ & DROP by default, no exceptions                                 & $p_{12}$, $p_7$--$p_9$, $p_{14}$ \\
+$\mathit{FW}^{M}_4$ & $\mathit{AP}(\text{Usti n.L.},\text{Liberec})$ & DROP by default; ALLOW Opava $\to$ Usti n.L.                 & $p_{13}$ \\
+$\mathit{FW}^{M}_5$ & $\mathit{AP}(\text{C.Budejovice},\text{Plzen})$ & DROP by default, no exceptions                                & $p_8$ (Ostrava's Jihlava bypass) \\
+\hline
+\end{tabularx}
+\end{table}
+
+$\mathit{FW}^{M}_1$ plays the same role $\mathit{FW}_2$ plays in the iterative configuration, on the same Allocation Place. $\mathit{FW}^{M}_2$ and $\mathit{FW}^{M}_5$ likewise coincide, edge for edge, with $\mathit{FW}_5$ and $\mathit{FW}_4$. The difference is concentrated in how the northern isolation of Ostrava and Olomouc ($p_7$--$p_9$, $p_{14}$) is achieved: the iterative trace dedicates a firewall to $\mathit{AP}(\text{Hradec Kralove},\text{Letohrad})$ for this purpose, while the monolithic run instead extends the default-DROP firewall already required at $\mathit{AP}(\text{Praha},\text{Pardubice})$ for $p_{12}$, reusing it to close the same northern route one hop closer to Praha. This alone accounts for the entire gap between five and six firewalls: with the northern route closed there, $\mathit{AP}(\text{Praha},\text{Plzen})$'s Marianske Lazne side is left entirely unguarded, because no NSR in the set ever routes traffic across it that needs to be blocked — a fact only visible once every requirement is known in advance.
+
+\paragraph{Why the two configurations differ.} The gap is not a matter of one algorithm being more careful than the other; both configurations are correct, minimal with respect to their own inputs, and satisfy the same fifteen requirements. The difference comes down to what each approach is allowed to see at the moment it commits to a placement. The monolithic solver optimizes over the complete, final NSR set in a single MaxSMT call, so it can freely trade off which existing firewall to reuse against which new one to allocate, and it can recognize in advance that a given Allocation Place will never carry any traffic worth blocking. The iterative process, by construction, only ever sees \texttt{consideredProps} — the NSRs introduced so far — and must commit to a placement for each new isolation requirement without knowledge of what will be asked next; $P_0$ already includes $\mathit{FW}_1$ at $\mathit{AP}(\text{Hradec Kralove},\text{Letohrad})$ before iteration 2 ever introduces $p_{12}$ and, with it, the opportunity to close the same route more cheaply somewhere else. Once $\mathit{FW}_1$ exists and is doing its job, nothing in Step 2 or Step 3 of a later iteration has any reason to remove it merely because a cheaper global arrangement has since become possible — React-VEREFOO's bias toward reuse (Section~\ref{sec:iterative-loop}) actively works against this kind of retroactive consolidation, by design.
+
+\paragraph{Why the iterative result may still be preferable.} A smaller firewall count is not, by itself, the only criterion that matters in practice, and there are reasons to believe the iterative approach remains the more suitable choice for a live network, even where it costs one extra firewall — though the points below are hypotheses this thesis has not yet measured directly, and are left for future validation.
+
+First, a monolithic re-run of the kind performed here needs the entire final NSR set available upfront; in a real network, policies do not arrive all at once but accumulate over time, which is precisely the operating assumption the iterative approach is built around. Approximating an incremental workflow with vanilla VEREFOO would mean re-solving the whole configuration from scratch after every single new NSR, with no guarantee that the newly computed optimum resembles the previous one.
+
+Second, and following from this, a full re-solve offers no guarantee of \emph{stability} between successive configurations: as seen above, a cheaper global arrangement can lead the solver to relocate the firewall enforcing $p_7$--$p_9$ from $\mathit{AP}(\text{Hradec Kralove},\text{Letohrad})$ to $\mathit{AP}(\text{Praha},\text{Pardubice})$ once $p_{12}$ enters the picture, even though the original placement was still perfectly valid. On an operational network, every such relocation is a reconfiguration with a real-world cost — rule churn, momentary inconsistency while the change is rolled out, and change-management overhead — that has to be paid even for firewalls whose behavior, from the network operator's point of view, did not need to change at all. React-VEREFOO's reuse-biased Step 2 and Step 3 are designed explicitly to avoid this: once a firewall is placed, it is left untouched unless the new requirement genuinely cannot be satisfied without altering it.
+
+Third, solving a single, monolithic MaxSMT instance over an ever-growing property set is expected to scale worse than solving one requirement at a time against a mostly-fixed configuration, particularly as the topology and the NSR set grow well beyond the fifteen used in this validation; this thesis does not provide a timing benchmark broad enough to confirm this at scale, and doing so is left as future work.
+
+These three points do not overturn the observation that the monolithic run found a more compact configuration for this specific, static snapshot of fifteen NSRs — they argue instead that compactness measured this way is not the only, and perhaps not even the most relevant, axis along which to judge an approach meant to operate incrementally on a live network.
