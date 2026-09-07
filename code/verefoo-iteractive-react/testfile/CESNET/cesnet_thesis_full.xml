@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NFV xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="../../xsd/nfvSchema.xsd">
+	<graphs>
+		<graph id="0">
+			<!-- CESNET topology, rebuilt to match the thesis's "Allocation Place per edge" model:
+			     - Every real CESNET router (10.0.0.1-23) is LOCKED as functional_type="FORWARDER":
+			       it can never become a firewall, exactly like a fixed network device.
+			     - Every one of the 28 backbone links gets its own dedicated, untyped intermediate
+			       node (30.0.0.1-28) = the actual "Allocation Place" for that edge. Only these 28
+			       nodes are eligible firewall candidates, one per edge, matching Chapter 2's model.
+			     - The 10 WEBCLIENT hosts (20.0.0.1-10) are unchanged, attached directly to their
+			       router (host-access links are not part of the AP model). -->
+
+			<!-- ===== Routers (locked, FORWARDER) ===== -->
+			<node functional_type="FORWARDER" name="10.0.0.1"> <!-- Praha -->
+				<neighbour name="30.0.0.1" /> <!-- AP Praha-Brno -->
+				<neighbour name="30.0.0.2" /> <!-- AP Praha-MarLazne -->
+				<neighbour name="30.0.0.3" /> <!-- AP Praha-UstiNL -->
+				<neighbour name="30.0.0.4" /> <!-- AP Praha-Podebrady -->
+				<neighbour name="30.0.0.5" /> <!-- AP Praha-Pardubice -->
+				<neighbour name="30.0.0.6" /> <!-- AP Praha-Tabor -->
+				<neighbour name="20.0.0.1" /> <!-- local host -->
+				<configuration name="conf_Praha" description="Praha">
+					<forwarder><name>Praha</name></forwarder>
+				</configuration>
+			</node>
+			<node functional_type="FORWARDER" name="10.0.0.2"> <!-- Brno -->
+				<neighbour name="30.0.0.1" /> <!-- AP Praha-Brno -->
+				<neighbour name="30.0.0.21" /> <!-- AP Ostrava-Brno -->
+				<neighbour name="30.0.0.22" /> <!-- AP Zlin-Brno -->
+				<neighbour name="30.0.0.23" /> <!-- AP Brno-Jihlava -->
+				<neighbour name="30.0.0.24" /> <!-- AP Brno-Znojmo -->
+				<neighbour name="30.0.0.25" /> <!-- AP Brno-Kyjov -->
+				<neighbour name="20.0.0.2" /> <!-- local host -->
+				<configuration name="conf_Brno" description="Brno">
+					<forwarder><name>Brno</name></forwarder>
+				</configuration>
+			</node>
+			<node functional_type="FORWARDER" name="10.0.0.3"> <!-- MarLazne -->
+				<neighbour name="30.0.0.2" /> <!-- AP Praha-MarLazne -->
+				<neighbour name="30.0.0.7" /> <!-- AP MarLazne-Cheb -->
+				<neighbour name="30.0.0.8" /> <!-- AP MarLazne-Plzen -->
+				<configuration name="conf_MarLazne" description="MarLazne">
+					<forwarder><name>MarLazne</name></forwarder>
+				</configuration>
+			</node>
+			<node functional_type="FORWARDER" name="10.0.0.4"> <!-- UstiNL -->
+				<neighbour name="30.0.0.3" /> <!-- AP Praha-UstiNL -->
+				<neighbour name="30.0.0.10" /> <!-- AP Most-UstiNL -->
+				<neighbour name="30.0.0.11" /> <!-- AP UstiNL-Liberec -->
+				<neighbour name="20.0.0.3" /> <!-- local host -->
+				<configuration name="conf_UstiNL" description="UstiNL">
+					<forwarder><name>UstiNL</name></forwarder>
+				</configuration>
+			</node>
+			<node functional_type="FORWARDER" name="10.0.0.5"> <!-- Podebrady -->
+				<neighbour name="30.0.0.4" /> <!-- AP Praha-Podebrady -->
+				<neighbour name="20.0.0.4" /> <!-- local host -->
+				<configuration name="conf_Podebrady" description="Podebrady">
+					<forwarder><name>Podebrady</name></forwarder>
+				</configuration>
+			</node>
+			<node functional_type="FORWARDER" name="10.0.0.6"> <!-- Pardubice -->
+				<neighbour name="30.0.0.5" /> <!-- AP Praha-Pardubice -->
+				<neighbour name="30.0.0.14" /> <!-- AP HradecKralove-Pardubice -->
+				<neighbour name="30.0.0.15" /> <!-- AP Pardubice-KutnaHora -->
+				<neighbour name="20.0.0.5" /> <!-- local host -->
+				<configuration name="conf_Pardubice" description="Pardubice">
+					<forwarder><name>Pardubice</name></forwarder>
+				</configuration>
+			</node>
+			<node functional_type="FORWARDER" name="10.0.0.7"> <!-- Tabor -->
+				<neighbour name="30.0.0.6" /> <!-- AP Praha-Tabor -->
+				<neighbour name="20.0.0.6" /> <!-- local host -->
+				<configuration name="conf_Tabor" description="Tabor">
+					<forwarder><name>Tabor</name></forwarder>
+				</configuration>
+			</node>
+			<node functional_type="FORWARDER" name="10.0.0.8"> <!-- Cheb -->
+				<neighbour name="30.0.0.7" /> <!-- AP MarLazne-Cheb -->
+				<neighbour name="30.0.0.9" /> <!-- AP Cheb-Most -->
+				<configuration name="conf_Cheb" description="Cheb">
+					<forwarder><name>Cheb</name></forwarder>
+				</configuration>
+			</node>
+			<node functional_type="FORWARDER" name="10.0.0.9"> <!-- Most -->
+				<neighbour name="30.0.0.9" /> <!-- AP Cheb-Most -->
+				<neighbour name="30.0.0.10" /> <!-- AP Most-UstiNL -->
+				<configuration name="conf_Most" description="Most">
+					<forwarder><name>Most</name></forwarder>
+				</configuration>
+			</node>
+			<node functional_type="FORWARDER" name="10.0.0.10"> <!-- Liberec -->
+				<neighbour name="30.0.0.11" /> <!-- AP UstiNL-Liberec -->
+				<neighbour name="30.0.0.12" /> <!-- AP Liberec-HradecKralove -->
+				<configuration name="conf_Liberec" description="Liberec">
+					<forwarder><name>Liberec</name></forwarder>
+				</configuration>
+			</node>
+			<node functional_type="FORWARDER" name="10.0.0.11"> <!-- HradecKralove -->
+				<neighbour name="30.0.0.12" /> <!-- AP Liberec-HradecKralove -->
+				<neighbour name="30.0.0.13" /> <!-- AP HradecKralove-Letohrad -->
+				<neighbour name="30.0.0.14" /> <!-- AP HradecKralove-Pardubice -->
+				<configuration name="conf_HradecKralove" description="HradecKralove">
+					<forwarder><name>HradecKralove</name></forwarder>
+				</configuration>
+			</node>
+			<node functional_type="FORWARDER" name="10.0.0.12"> <!-- Letohrad -->
+				<neighbour name="30.0.0.13" /> <!-- AP HradecKralove-Letohrad -->
+				<neighbour name="30.0.0.16" /> <!-- AP Letohrad-Opava -->
+				<neighbour name="30.0.0.17" /> <!-- AP Letohrad-Olomouc -->
+				<configuration name="conf_Letohrad" description="Letohrad">
+					<forwarder><name>Letohrad</name></forwarder>
+				</configuration>
+			</node>
+			<node functional_type="FORWARDER" name="10.0.0.13"> <!-- KutnaHora -->
+				<neighbour name="30.0.0.15" /> <!-- AP Pardubice-KutnaHora -->
+				<configuration name="conf_KutnaHora" description="KutnaHora">
+					<forwarder><name>KutnaHora</name></forwarder>
+				</configuration>
+			</node>
+			<node functional_type="FORWARDER" name="10.0.0.14"> <!-- Opava -->
+				<neighbour name="30.0.0.16" /> <!-- AP Letohrad-Opava -->
+				<neighbour name="30.0.0.18" /> <!-- AP Opava-Ostrava -->
+				<neighbour name="20.0.0.7" /> <!-- local host -->
+				<configuration name="conf_Opava" description="Opava">
+					<forwarder><name>Opava</name></forwarder>
+				</configuration>
+			</node>
+			<node functional_type="FORWARDER" name="10.0.0.15"> <!-- Olomouc -->
+				<neighbour name="30.0.0.17" /> <!-- AP Letohrad-Olomouc -->
+				<neighbour name="30.0.0.19" /> <!-- AP Olomouc-Ostrava -->
+				<neighbour name="30.0.0.20" /> <!-- AP Olomouc-Zlin -->
+				<neighbour name="20.0.0.8" /> <!-- local host -->
+				<configuration name="conf_Olomouc" description="Olomouc">
+					<forwarder><name>Olomouc</name></forwarder>
+				</configuration>
+			</node>
+			<node functional_type="FORWARDER" name="10.0.0.16"> <!-- Ostrava -->
+				<neighbour name="30.0.0.18" /> <!-- AP Opava-Ostrava -->
+				<neighbour name="30.0.0.19" /> <!-- AP Olomouc-Ostrava -->
+				<neighbour name="30.0.0.21" /> <!-- AP Ostrava-Brno -->
+				<neighbour name="20.0.0.9" /> <!-- local host -->
+				<configuration name="conf_Ostrava" description="Ostrava">
+					<forwarder><name>Ostrava</name></forwarder>
+				</configuration>
+			</node>
+			<node functional_type="FORWARDER" name="10.0.0.17"> <!-- Zlin -->
+				<neighbour name="30.0.0.20" /> <!-- AP Olomouc-Zlin -->
+				<neighbour name="30.0.0.22" /> <!-- AP Zlin-Brno -->
+				<configuration name="conf_Zlin" description="Zlin">
+					<forwarder><name>Zlin</name></forwarder>
+				</configuration>
+			</node>
+			<node functional_type="FORWARDER" name="10.0.0.18"> <!-- Jihlava -->
+				<neighbour name="30.0.0.23" /> <!-- AP Brno-Jihlava -->
+				<neighbour name="30.0.0.26" /> <!-- AP Jihlava-JHradec -->
+				<configuration name="conf_Jihlava" description="Jihlava">
+					<forwarder><name>Jihlava</name></forwarder>
+				</configuration>
+			</node>
+			<node functional_type="FORWARDER" name="10.0.0.19"> <!-- Znojmo -->
+				<neighbour name="30.0.0.24" /> <!-- AP Brno-Znojmo -->
+				<configuration name="conf_Znojmo" description="Znojmo">
+					<forwarder><name>Znojmo</name></forwarder>
+				</configuration>
+			</node>
+			<node functional_type="FORWARDER" name="10.0.0.20"> <!-- Kyjov -->
+				<neighbour name="30.0.0.25" /> <!-- AP Brno-Kyjov -->
+				<configuration name="conf_Kyjov" description="Kyjov">
+					<forwarder><name>Kyjov</name></forwarder>
+				</configuration>
+			</node>
+			<node functional_type="FORWARDER" name="10.0.0.21"> <!-- JHradec -->
+				<neighbour name="30.0.0.26" /> <!-- AP Jihlava-JHradec -->
+				<neighbour name="30.0.0.27" /> <!-- AP JHradec-CBudejovice -->
+				<configuration name="conf_JHradec" description="JHradec">
+					<forwarder><name>JHradec</name></forwarder>
+				</configuration>
+			</node>
+			<node functional_type="FORWARDER" name="10.0.0.22"> <!-- CBudejovice -->
+				<neighbour name="30.0.0.27" /> <!-- AP JHradec-CBudejovice -->
+				<neighbour name="30.0.0.28" /> <!-- AP CBudejovice-Plzen -->
+				<configuration name="conf_CBudejovice" description="CBudejovice">
+					<forwarder><name>CBudejovice</name></forwarder>
+				</configuration>
+			</node>
+			<node functional_type="FORWARDER" name="10.0.0.23"> <!-- Plzen -->
+				<neighbour name="30.0.0.8" /> <!-- AP MarLazne-Plzen -->
+				<neighbour name="30.0.0.28" /> <!-- AP CBudejovice-Plzen -->
+				<neighbour name="20.0.0.10" /> <!-- local host -->
+				<configuration name="conf_Plzen" description="Plzen">
+					<forwarder><name>Plzen</name></forwarder>
+				</configuration>
+			</node>
+
+			<!-- ===== Allocation Places: one untyped node per edge (30.0.0.1-28) ===== -->
+			<node name="30.0.0.1"> <!-- AP Praha-Brno -->
+				<neighbour name="10.0.0.1" />
+				<neighbour name="10.0.0.2" />
+			</node>
+			<node name="30.0.0.2"> <!-- AP Praha-MarLazne -->
+				<neighbour name="10.0.0.1" />
+				<neighbour name="10.0.0.3" />
+			</node>
+			<node name="30.0.0.3"> <!-- AP Praha-UstiNL -->
+				<neighbour name="10.0.0.1" />
+				<neighbour name="10.0.0.4" />
+			</node>
+			<node name="30.0.0.4"> <!-- AP Praha-Podebrady -->
+				<neighbour name="10.0.0.1" />
+				<neighbour name="10.0.0.5" />
+			</node>
+			<node name="30.0.0.5"> <!-- AP Praha-Pardubice -->
+				<neighbour name="10.0.0.1" />
+				<neighbour name="10.0.0.6" />
+			</node>
+			<node name="30.0.0.6"> <!-- AP Praha-Tabor -->
+				<neighbour name="10.0.0.1" />
+				<neighbour name="10.0.0.7" />
+			</node>
+			<node name="30.0.0.7"> <!-- AP MarLazne-Cheb -->
+				<neighbour name="10.0.0.3" />
+				<neighbour name="10.0.0.8" />
+			</node>
+			<node name="30.0.0.8"> <!-- AP MarLazne-Plzen -->
+				<neighbour name="10.0.0.3" />
+				<neighbour name="10.0.0.23" />
+			</node>
+			<node name="30.0.0.9"> <!-- AP Cheb-Most -->
+				<neighbour name="10.0.0.8" />
+				<neighbour name="10.0.0.9" />
+			</node>
+			<node name="30.0.0.10"> <!-- AP Most-UstiNL -->
+				<neighbour name="10.0.0.9" />
+				<neighbour name="10.0.0.4" />
+			</node>
+			<node name="30.0.0.11"> <!-- AP UstiNL-Liberec -->
+				<neighbour name="10.0.0.4" />
+				<neighbour name="10.0.0.10" />
+			</node>
+			<node name="30.0.0.12"> <!-- AP Liberec-HradecKralove -->
+				<neighbour name="10.0.0.10" />
+				<neighbour name="10.0.0.11" />
+			</node>
+			<node name="30.0.0.13"> <!-- AP HradecKralove-Letohrad -->
+				<neighbour name="10.0.0.11" />
+				<neighbour name="10.0.0.12" />
+			</node>
+			<node name="30.0.0.14"> <!-- AP HradecKralove-Pardubice -->
+				<neighbour name="10.0.0.11" />
+				<neighbour name="10.0.0.6" />
+			</node>
+			<node name="30.0.0.15"> <!-- AP Pardubice-KutnaHora -->
+				<neighbour name="10.0.0.6" />
+				<neighbour name="10.0.0.13" />
+			</node>
+			<node name="30.0.0.16"> <!-- AP Letohrad-Opava -->
+				<neighbour name="10.0.0.12" />
+				<neighbour name="10.0.0.14" />
+			</node>
+			<node name="30.0.0.17"> <!-- AP Letohrad-Olomouc -->
+				<neighbour name="10.0.0.12" />
+				<neighbour name="10.0.0.15" />
+			</node>
+			<node name="30.0.0.18"> <!-- AP Opava-Ostrava -->
+				<neighbour name="10.0.0.14" />
+				<neighbour name="10.0.0.16" />
+			</node>
+			<node name="30.0.0.19"> <!-- AP Olomouc-Ostrava -->
+				<neighbour name="10.0.0.15" />
+				<neighbour name="10.0.0.16" />
+			</node>
+			<node name="30.0.0.20"> <!-- AP Olomouc-Zlin -->
+				<neighbour name="10.0.0.15" />
+				<neighbour name="10.0.0.17" />
+			</node>
+			<node name="30.0.0.21"> <!-- AP Ostrava-Brno -->
+				<neighbour name="10.0.0.16" />
+				<neighbour name="10.0.0.2" />
+			</node>
+			<node name="30.0.0.22"> <!-- AP Zlin-Brno -->
+				<neighbour name="10.0.0.17" />
+				<neighbour name="10.0.0.2" />
+			</node>
+			<node name="30.0.0.23"> <!-- AP Brno-Jihlava -->
+				<neighbour name="10.0.0.2" />
+				<neighbour name="10.0.0.18" />
+			</node>
+			<node name="30.0.0.24"> <!-- AP Brno-Znojmo -->
+				<neighbour name="10.0.0.2" />
+				<neighbour name="10.0.0.19" />
+			</node>
+			<node name="30.0.0.25"> <!-- AP Brno-Kyjov -->
+				<neighbour name="10.0.0.2" />
+				<neighbour name="10.0.0.20" />
+			</node>
+			<node name="30.0.0.26"> <!-- AP Jihlava-JHradec -->
+				<neighbour name="10.0.0.18" />
+				<neighbour name="10.0.0.21" />
+			</node>
+			<node name="30.0.0.27"> <!-- AP JHradec-CBudejovice -->
+				<neighbour name="10.0.0.21" />
+				<neighbour name="10.0.0.22" />
+			</node>
+			<node name="30.0.0.28"> <!-- AP CBudejovice-Plzen -->
+				<neighbour name="10.0.0.22" />
+				<neighbour name="10.0.0.23" />
+			</node>
+
+			<!-- ===== Traffic endpoints: one WEBCLIENT leaf host per location used as a Property src/dst ===== -->
+			<node functional_type="WEBCLIENT" name="20.0.0.1"> <!-- host @ Praha -->
+				<neighbour name="10.0.0.1" />
+			</node>
+			<node functional_type="WEBCLIENT" name="20.0.0.2"> <!-- host @ Brno -->
+				<neighbour name="10.0.0.2" />
+			</node>
+			<node functional_type="WEBCLIENT" name="20.0.0.3"> <!-- host @ UstiNL -->
+				<neighbour name="10.0.0.4" />
+			</node>
+			<node functional_type="WEBCLIENT" name="20.0.0.4"> <!-- host @ Podebrady -->
+				<neighbour name="10.0.0.5" />
+			</node>
+			<node functional_type="WEBCLIENT" name="20.0.0.5"> <!-- host @ Pardubice -->
+				<neighbour name="10.0.0.6" />
+			</node>
+			<node functional_type="WEBCLIENT" name="20.0.0.6"> <!-- host @ Tabor -->
+				<neighbour name="10.0.0.7" />
+			</node>
+			<node functional_type="WEBCLIENT" name="20.0.0.7"> <!-- host @ Opava -->
+				<neighbour name="10.0.0.14" />
+			</node>
+			<node functional_type="WEBCLIENT" name="20.0.0.8"> <!-- host @ Olomouc -->
+				<neighbour name="10.0.0.15" />
+			</node>
+			<node functional_type="WEBCLIENT" name="20.0.0.9"> <!-- host @ Ostrava -->
+				<neighbour name="10.0.0.16" />
+			</node>
+			<node functional_type="WEBCLIENT" name="20.0.0.10"> <!-- host @ Plzen -->
+				<neighbour name="10.0.0.23" />
+			</node>
+		</graph>
+	</graphs>
+	<Constraints>
+		<NodeConstraints/>
+		<LinkConstraints />
+	</Constraints>
+	<PropertyDefinition>
+		<!-- P0: p1-p10 -->
+		<Property graph="0" name="ReachabilityProperty" src="20.0.0.1" dst="20.0.0.2" /> <!-- Praha -> Brno -->
+		<Property graph="0" name="ReachabilityProperty" src="20.0.0.2" dst="20.0.0.1" /> <!-- Brno -> Praha -->
+		<Property graph="0" name="ReachabilityProperty" src="20.0.0.1" dst="20.0.0.10" /> <!-- Praha -> Plzen -->
+		<Property graph="0" name="ReachabilityProperty" src="20.0.0.10" dst="20.0.0.1" /> <!-- Plzen -> Praha -->
+		<Property graph="0" name="ReachabilityProperty" src="20.0.0.1" dst="20.0.0.3" /> <!-- Praha -> UstiNL -->
+		<Property graph="0" name="ReachabilityProperty" src="20.0.0.3" dst="20.0.0.1" /> <!-- UstiNL -> Praha -->
+		<Property graph="0" name="IsolationProperty" src="20.0.0.9" dst="20.0.0.1" /> <!-- Ostrava -> Praha -->
+		<Property graph="0" name="IsolationProperty" src="20.0.0.9" dst="20.0.0.10" /> <!-- Ostrava -> Plzen -->
+		<Property graph="0" name="IsolationProperty" src="20.0.0.9" dst="20.0.0.3" /> <!-- Ostrava -> UstiNL -->
+		<Property graph="0" name="IsolationProperty" src="20.0.0.2" dst="20.0.0.10" /> <!-- Brno -> Plzen -->
+		<!-- Incremental additions: p11-p15 -->
+		<Property graph="0" name="IsolationProperty" src="20.0.0.4" dst="20.0.0.3" /> <!-- Podebrady -> UstiNL -->
+		<Property graph="0" name="IsolationProperty" src="20.0.0.6" dst="20.0.0.5" /> <!-- Tabor -> Pardubice -->
+		<Property graph="0" name="ReachabilityProperty" src="20.0.0.7" dst="20.0.0.3" /> <!-- Opava -> UstiNL -->
+		<Property graph="0" name="IsolationProperty" src="20.0.0.8" dst="20.0.0.1" /> <!-- Olomouc -> Praha -->
+		<Property graph="0" name="ReachabilityProperty" src="20.0.0.6" dst="20.0.0.3" /> <!-- Tabor -> UstiNL -->
+	</PropertyDefinition>
+</NFV>
