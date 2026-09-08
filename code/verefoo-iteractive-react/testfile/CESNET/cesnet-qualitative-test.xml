@@ -3,7 +3,7 @@
 	xsi:noNamespaceSchemaLocation="../../xsd/nfvSchema.xsd">
 	<graphs>
 		<graph id="0">
-			<!-- ===== Routers (FORWARDER) ===== -->
+			<!-- ===== Routers (locked, FORWARDER) ===== -->
 			<node functional_type="FORWARDER" name="10.0.0.1"> <!-- Praha -->
 				<neighbour name="30.0.0.1" /> <!-- AP Praha-Brno -->
 				<neighbour name="30.0.0.2" /> <!-- AP Praha-MarLazne -->
@@ -186,7 +186,7 @@
 				</configuration>
 			</node>
 
-			<!-- ===== Allocation Places ===== -->
+			<!-- ===== Allocation Places: one untyped node per edge (30.0.0.1-28) ===== -->
 			<node name="30.0.0.1"> <!-- AP Praha-Brno -->
 				<neighbour name="10.0.0.1" />
 				<neighbour name="10.0.0.2" />
@@ -300,7 +300,7 @@
 				<neighbour name="10.0.0.23" />
 			</node>
 
-			<!-- ===== End-points: WEBCLIENT ===== -->
+			<!-- ===== Traffic endpoints: one WEBCLIENT leaf host per location used as a Property src/dst ===== -->
 			<node functional_type="WEBCLIENT" name="20.0.0.1"> <!-- host @ Praha -->
 				<neighbour name="10.0.0.1" />
 			</node>
