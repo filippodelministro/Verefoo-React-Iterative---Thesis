@@ -32,9 +32,6 @@ If the input \texttt{NFV} object contains a pre-existing set of already enforced
 \subsection{Core change:  the Iterative Loop}
 \label{sec:iterative-loop}
 
-
-%todo: singleProp indica la lista delle targetProp; il nome vuole indicare che aggiungiamo una sola proprietà alla volta; cambiamo nome in targetProp?
-
 The main loop iterates over \texttt{prop}, the list of new requirements (NSRs) to incorporate. At each step, \texttt{VerefooProxy} expects two NSR lists: \texttt{consideredProps} as the initial set of requirements already enforced, and \texttt{singleProp} as the new property to be added\footnote{\texttt{singleProp} is built as shown in Listing~\ref{lst:iterative-loop} to match the input format expected by the \texttt{VerefooProxy} interface.}. \texttt{VerefooProxy} then computes the difference between the two lists to derive the \textit{added}, \textit{kept}, and \textit{deleted} requirement sets, as described in Chapter~\ref{chap:background}. By construction, $R_a$ (the \textit{added} set) always contains exactly one element.
 
 \begin{lstlisting}[language=Java, caption={Core of the iterative loop.}, label={lst:iterative-loop}]
