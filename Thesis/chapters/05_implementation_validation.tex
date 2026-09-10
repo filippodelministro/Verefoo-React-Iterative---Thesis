@@ -94,10 +94,9 @@ In summary, the core change to the original React-VEREFOO is the introduction of
 
 To validate the correctness of the iterative algorithm on a realistic topology, this section traces its execution step by step on the CESNET network — the Czech academic and research backbone shown in Figure~\ref{fig:cesnet-topology}. The test is qualitative: NSRs and an initial firewall configuration are defined on the CESNET real topology, and each iteration of the algorithm is applied by hand to verify that (i) each new requirement is satisfied, and (ii) no previously satisfied requirement is broken. This mirrors the structure of the Worked Example in Chapter~\ref{chap:iterative}, applied to a real-world topology.
 
-% todo: cambiare la foto con uno schema della stessa identica topologia con lo stile degli altri grafici della tesi (stesso stile anche di quelli successivi)
 \begin{figure}[H]
     \centering
-    \hspace*{-0.05\textwidth}\includegraphics[width=1.1\textwidth]{images/topologies/Cesnet1.png}
+    \hspace*{-0.05\textwidth}\includegraphics[width=1.1\textwidth]{images/topologies/cesnet-topology.png}
     \caption{CESNET backbone topology. Nodes represent Czech cities interconnected by high-speed academic links.}
     \label{fig:cesnet-topology}
 \end{figure}
@@ -147,10 +146,10 @@ $P_0$ is the initial set of ten NSRs listed in Table~\ref{tab:cesnet-initial}, a
         \texttt{default: DROP} \hfill ($p_7$, $p_8$, $p_9$, $p_{10}$)
 
   \item $\mathit{FW}_3$ at $\mathit{AP}(\text{C.Budejovice},\text{Plzen})$:\\
-        \texttt{default: DROP} \hfill ($p_7$, $p_8$, $p_9$ on the Jihlava bypass; $p_{10}$)
+        \texttt{default: DROP} \hfill ($p_7$, $p_8$, $p_9$, $p_{10}$)
 \end{itemize}
 
-% todo: aggiungere schema semplificato che mostri solo il sottoinsieme di archi rilevanti per la traccia con gli AP e i firewall evidenziati
+% todo: aggiungere schema che mostri solo il sottoinsieme di archi rilevanti per gli NSR con gli AP e i firewall evidenziati: reachability in verde, isolation in rosso, e i tre firewall con le regole evidenziate.
 
 \subsubsection{Incremental Additions}
 
