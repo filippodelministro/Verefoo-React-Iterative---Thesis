@@ -149,7 +149,12 @@ $P_0$ is the initial set of ten NSRs listed in Table~\ref{tab:cesnet-initial}, a
         \texttt{default: DROP} \hfill ($p_7$, $p_8$, $p_9$, $p_{10}$)
 \end{itemize}
 
-% todo: aggiungere schema che mostri solo il sottoinsieme di archi rilevanti per gli NSR con gli AP e i firewall evidenziati: reachability in verde, isolation in rosso, e i tre firewall con le regole evidenziate.
+\begin{figure}[H]
+    \centering
+    \hspace*{-0.05\textwidth}\includegraphics[width=1.1\textwidth]{images/topologies/cesnet-initial-nsrs.png}
+    \caption{Subset of the CESNET topology relevant to $P_0$: reachability paths ($p_1$--$p_6$) in green, isolation paths ($p_7$--$p_{10}$) in red, and the three firewalls allocated to enforce them.}
+    \label{fig:cesnet-initial-nsrs}
+\end{figure}
 
 \subsubsection{Incremental Additions}
 
@@ -196,7 +201,12 @@ $\mathit{FW}_4$ at $\mathit{AP}(\text{Praha},\text{Podebrady})$:\\
 No existing firewall is touched.\\
 \textbf{Result: SAT.} New firewall allocated.
 
-% todo: add schema of the interested area showing the new firewall and the path of the new requirement (red for isolation, green for reachability)
+\begin{figure}[H]
+    \centering
+    \hspace*{-0.05\textwidth}\includegraphics[width=1.1\textwidth]{images/Topologies/cesnet-iteration-1.png}
+    \caption{Iteration 1: $p_{11}$ (Podebrady $\not\to$ Usti n.L.) is enforced by allocating $\mathit{FW}_4$ at $\mathit{AP}(\text{Praha},\text{Podebrady})$.}
+    \label{fig:cesnet-iteration-1}
+\end{figure}
 
 \paragraph{Iteration 2 — $p_{12}$: Tabor $\not\to$ Pardubice (Isolation).}
 
@@ -215,7 +225,12 @@ Section~\ref{sec:tie-breaking-closer-look} takes a closer look at this specific 
 
 \textbf{Result: SAT.} New firewall allocated.
 
-% todo: add schema of the interested area showing the new firewall and the path of the new requirement (red for isolation, green for reachability)
+\begin{figure}[H]
+    \centering
+    \hspace*{-0.05\textwidth}\includegraphics[width=1.1\textwidth]{images/Topologies/cesnet-iteration-2.png}
+    \caption{Iteration 2: $p_{12}$ (Tabor $\not\to$ Pardubice) is enforced by allocating $\mathit{FW}_5$ at $\mathit{AP}(\text{Praha},\text{Pardubice})$.}
+    \label{fig:cesnet-iteration-2}
+\end{figure}
 
 \paragraph{Iteration 3 — $p_{13}$: Opava $\to$ Usti n.L. (Reachability).}
 
@@ -234,8 +249,6 @@ $\mathit{FW}_1$ updated ($\mathit{AP}(\text{Hradec Kralove},\text{Letohrad})$):\
 Ostrava, Olomouc, and every other pair crossing this link still have no matching ALLOW rule, so $p_7$--$p_9$ remain fully enforced.\\
 \textbf{Result: SAT.} $\mathit{FW}_1$ reconfigured.
 
-% todo: add schema of the interested area showing the new firewall and the path of the new requirement (red for isolation, green for reachability)
-
 \paragraph{Iteration 4 — $p_{14}$: Olomouc $\not\to$ Praha (Isolation).}
 
 \begin{center}
@@ -245,8 +258,6 @@ $R_k = P_0 \cup \{p_{11},p_{12},p_{13}\},\quad R_a = \{p_{14}\},\quad R_d = \emp
 Olomouc has three routes toward Praha, and all three cross a firewall already in place. The first goes through $\mathit{FW}_1$ (via Letohrad and Hradec Kralove); the second, through $\mathit{FW}_2$ at $\mathit{AP}(\text{Brno},\text{Praha})$ (via Zlin and Brno); the third — via Ostrava, Brno, Jihlava, and beyond, the same bypass identified for $p_7$--$p_9$ in $P_0$ — through $\mathit{FW}_3$ at $\mathit{AP}(\text{C.Budejovice},\text{Plzen})$. None of the three firewalls has an ALLOW rule matching this pair. Every route is therefore already blocked, and Step 2 finds nothing to reconfigure.\\
 \textbf{Result: SAT, no change.}
 
-% todo: add schema of the interested area showing the new firewall and the path of the new requirement (red for isolation, green for reachability)
-
 \paragraph{Iteration 5 — $p_{15}$: Tabor $\to$ Usti n.L. (Reachability).}
 
 \begin{center}
@@ -255,8 +266,6 @@ $R_k = P_0 \cup \{p_{11},p_{12},p_{13},p_{14}\},\quad R_a = \{p_{15}\},\quad R_d
 
 Traffic Tabor $\to$ Usti n.L. would follow \texttt{Tabor–Praha–Usti n.L.}. Both links are still plain forwarders: $\mathit{AP}(\text{Praha},\text{Tabor})$ was left untouched by iteration 2, and $\mathit{AP}(\text{Praha},\text{Usti n.L.})$ has carried no firewall since $P_0$. The entire path is already open, so the requirement is satisfied without any change at zero cost.\\
 \textbf{Result: SAT, no change.} This outcome is a direct consequence of the specific way iteration 2 was resolved. Section~\ref{sec:tie-breaking-closer-look} examines the case closely and shows that having chosen the alternative path, this requirement would have required a reconfiguration instead of being satisfied for free.
-
-% todo: add schema of the interested area showing the new firewall and the path of the new requirement (red for isolation, green for reachability)
 
 \subsubsection{Final Configuration Verification}
 
