@@ -249,6 +249,13 @@ $\mathit{FW}_1$ updated ($\mathit{AP}(\text{Hradec Kralove},\text{Letohrad})$):\
 Ostrava, Olomouc, and every other pair crossing this link still have no matching ALLOW rule, so $p_7$--$p_9$ remain fully enforced.\\
 \textbf{Result: SAT.} $\mathit{FW}_1$ reconfigured.
 
+\begin{figure}[H]
+    \centering
+    \hspace*{-0.05\textwidth}\includegraphics[width=1.1\textwidth]{images/Topologies/cesnet-iteration-3.png}
+    \caption{Iteration 3: $p_{13}$ (Opava $\to$ Usti n.L.) is enforced by reconfiguring $\mathit{FW}_1$ at $\mathit{AP}(\text{Hradec Kralove},\text{Letohrad})$ with an ALLOW exception.}
+    \label{fig:cesnet-iteration-3}
+\end{figure}
+
 \paragraph{Iteration 4 — $p_{14}$: Olomouc $\not\to$ Praha (Isolation).}
 
 \begin{center}
@@ -266,6 +273,13 @@ $R_k = P_0 \cup \{p_{11},p_{12},p_{13},p_{14}\},\quad R_a = \{p_{15}\},\quad R_d
 
 Traffic Tabor $\to$ Usti n.L. would follow \texttt{Tabor–Praha–Usti n.L.}. Both links are still plain forwarders: $\mathit{AP}(\text{Praha},\text{Tabor})$ was left untouched by iteration 2, and $\mathit{AP}(\text{Praha},\text{Usti n.L.})$ has carried no firewall since $P_0$. The entire path is already open, so the requirement is satisfied without any change at zero cost.\\
 \textbf{Result: SAT, no change.} This outcome is a direct consequence of the specific way iteration 2 was resolved. Section~\ref{sec:tie-breaking-closer-look} examines the case closely and shows that having chosen the alternative path, this requirement would have required a reconfiguration instead of being satisfied for free.
+
+\begin{figure}[H]
+    \centering
+    \hspace*{-0.05\textwidth}\includegraphics[width=1.1\textwidth]{images/Topologies/cesnet-iterations-4-5-v2.png}
+    \caption{Iterations 4 and 5: $p_{14}$ (Olomouc $\not\to$ Praha) is already blocked by $\mathit{FW}_1$, $\mathit{FW}_2$, and $\mathit{FW}_3$ on every route, and $p_{15}$ (Tabor $\to$ Usti n.L.) is already open, so neither requires a reconfiguration.}
+    \label{fig:cesnet-iterations-4-5}
+\end{figure}
 
 \subsubsection{Final Configuration Verification}
 
@@ -297,8 +311,6 @@ $p_{15}$ & Reach. & Unfiltered link (no firewall needed)                       &
 \hline
 \end{tabularx}
 \end{table}
-
-% todo: aggiungere schema che mostri la topologia aggiornata con i sei firewall e i percorsi dei quindici NSR, evidenziando i percorsi bloccati e quelli aperti
 
 \subsubsection{Discussion}
 
