@@ -223,7 +223,6 @@ $\mathit{FW}_5$ at $\mathit{AP}(\text{Praha},\text{Tabor})$:\\
 
 \textbf{Result: SAT.} New firewall allocated.
 
-% todo: rifare la figura cesnet-iteration-2.png per mostrare FW5 su AP(Praha,Tabor) invece che su AP(Praha,Pardubice), evidenziando anche il percorso alternativo via Usti n.L.--Liberec--Hradec Kralove
 \begin{figure}[H]
     \centering
     \hspace*{-0.05\textwidth}\includegraphics[width=1.1\textwidth]{images/Topologies/cesnet-iteration-2.png}
@@ -281,7 +280,6 @@ $\mathit{FW}_5$ updated ($\mathit{AP}(\text{Praha},\text{Tabor})$):\\
 Pardubice and every other destination reached through this link still have no matching ALLOW rule, so $p_{12}$ remains fully enforced.\\
 \textbf{Result: SAT.} $\mathit{FW}_5$ reconfigured.
 
-% todo: rifare la figura cesnet-iterations-4-5-v2.png: p14 resta invariata (bloccata su ogni percorso), ma p15 ora richiede la riconfigurazione di FW5 con ALLOW Tabor->Usti n.L., non è più a costo zero
 \begin{figure}[H]
     \centering
     \hspace*{-0.05\textwidth}\includegraphics[width=1.1\textwidth]{images/Topologies/cesnet-iterations-4-5-v2.png}
@@ -377,7 +375,19 @@ $\mathit{FW}^{M}_5$ & $\mathit{AP}(\text{C.Budejovice},\text{Plzen})$ & DROP by 
 
 Three of the five firewalls match exactly between the two configurations, each pair sitting on the same Allocation Place and playing the same role: $\mathit{FW}^{M}_1$ acts exactly as $\mathit{FW}_2$ does in the iterative version, at $\mathit{AP}(\text{Praha},\text{Brno})$; $\mathit{FW}^{M}_2$ as $\mathit{FW}_4$, at $\mathit{AP}(\text{Praha},\text{Podebrady})$; and $\mathit{FW}^{M}_5$ as $\mathit{FW}_3$, at $\mathit{AP}(\text{C.Budejovice},\text{Plzen})$. The remaining two placements differ, and the difference traces back to a single decision: where to enforce Ostrava and Olomouc's northern isolation ($p_7$--$p_9$, $p_{14}$). The iterative solution commits to this by placing $\mathit{FW}_1$ in $\mathit{AP}(\text{Hradec Kralove},\text{Letohrad})$ already in $P_0$, long before $p_{12}$ or $p_{13}$ exist. The monolithic run, seeing the full set of fifteen NSRs at once, instead places a firewall at $\mathit{AP}(\text{Usti n.L.},\text{Liberec})$ — a different point on the very same path (Opava--Letohrad--Hradec Kralove--Liberec--Usti n.L.). This is not an equivalent choice: $\mathit{AP}(\text{Usti n.L.},\text{Liberec})$ also happens to sit on Tabor's alternate route to Pardubice (Tabor--Praha--Usti n.L.--Liberec--Hradec Kralove--Pardubice), so placing the isolation firewall there closes that route too, at no extra cost. This is why the monolithic solution only needs one more firewall, at $\mathit{AP}(\text{Praha},\text{Pardubice})$, to close $p_{12}$'s direct route, and never needs a firewall dedicated to Tabor at all. The iterative trace, having already committed $\mathit{FW}_1$ to Hradec Kralove--Letohrad in $P_0$, cannot retroactively move it once $p_{12}$ introduces the alternate-route requirement, and must instead allocate a fifth firewall dedicated to $\mathit{AP}(\text{Praha},\text{Tabor})$ to close both of Tabor's routes at once. While the two solutions are equivalent in firewall count, the iterative solution carries one extra ALLOW rule, needed in iteration 5 to let Tabor $\to$ Usti n.L. traffic blocked by allocating $\mathit{FW}_5$ in iteration 2.
 
-% todo: aggiungere schema che mostri la topologia con i cinque firewall della soluzione monolitica, evidenziando le differenze rispetto alla soluzione iterativa
+% \begin{figure}[H]
+%     \centering
+%     \hspace*{-0.05\textwidth}\includegraphics[width=1.1\textwidth]{images/Topologies/cesnet-iterative-vs-monolithic.png}
+%     \caption{Iterative versus monolithic firewall placement over the full 15-NSR set: three Allocation Places coincide (Praha--Brno, Praha--Podebrady, C.Budejovice--Plzen), while the two configurations diverge on how Ostrava's northern isolation and Tabor's isolation are enforced.}
+%     \label{fig:cesnet-iterative-vs-monolithic}
+% \end{figure}
+
+\begin{figure}[H]
+    \centering
+    \hspace*{-0.05\textwidth}\includegraphics[width=1.1\textwidth]{images/Topologies/cesnet-iterative-vs-monolithic-side-by-side.png}
+    \caption{Iterative (left) and monolithic (right) firewall configurations shown side by side over the full 15-NSR set.}
+    \label{fig:cesnet-iterative-vs-monolithic-side-by-side}
+\end{figure}
 
 \paragraph{Why the two configurations differ, despite the tie.} Reaching the same firewall count does not mean the two approaches reasoned the same way, and the placement gap that remains is still informative. The monolithic solver optimizes over the complete, final NSR set in a single MaxSMT call, allowing a trade off on which existing firewall to reuse against which new one to allocate: it recognizes that closing the northern route at $\mathit{AP}(\text{Usti n.L.},\text{Liberec})$ is free once that firewall is needed anyway, and that this same placement also spares it a dedicated firewall for $p_{12}$. The iterative process, by construction, only ever sees \texttt{consideredProps} — the NSRs introduced so far — and must commit to a placement without knowledge of what will be asked next; $P_0$ allocates $\mathit{FW}_1$ at $\mathit{AP}(\text{Hradec Kralove},\text{Letohrad})$ without knowing the existence of $p_{12}$, and, with it, the opportunity to close the same route more cheaply somewhere else. This costs the iterative configuration one extra exception rule compared to the monolithic one, needed to reconfigure the dedicated Tabor firewall in iteration 5 — consistent with a process that only commits to what it knows at each step, and refines it as more requirements come in.
 
