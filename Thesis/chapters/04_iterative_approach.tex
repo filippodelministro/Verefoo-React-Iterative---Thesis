@@ -47,7 +47,7 @@ public VerefooSerializer(NFV root, String algo) { ... }
 
 \subsection{React-VEREFOO}
 
-React-VEREFOO extends vanilla VEREFOO with the ability to reuse an existing valid configuration when the NSR set changes, rather than recomputing everything from scratch~\cite{reactverefoo}. It takes two NSR sets as input: the \textit{initial} set $P_0$, representing the requirements already enforced by the current configuration, and the \textit{target} set $R_t$, representing the new requirements that must be incorporated. Internally, React-VEREFOO classifies every NSR into deleted ($R_d$), added ($R_a$), or kept ($R_k$) groups (as described in Section~\ref{chap:background}), identifies the minimal network area affected by the added requirements, and restricts the solver to that area while leaving the rest of the configuration untouched.
+React-VEREFOO extends vanilla VEREFOO with the ability to reuse an existing valid configuration when the NSR set changes, rather than recomputing everything from scratch~\cite{reactverefoo}. It takes two NSR sets as input: the \textit{initial} set $P_0$, representing the requirements already enforced by the current configuration, and the \textit{target} set $R_t$, representing the new requirements that must be incorporated. Internally, React-VEREFOO classifies every NSR into deleted ($R_d$), added ($R_a$), or kept ($R_k$) groups (as described in Chapter~\ref{chap:background}), identifies the minimal network area affected by the added requirements, and restricts the solver to that area while leaving the rest of the configuration untouched.
 
 \begin{algorithm}[H]
 \caption{React-VEREFOO}
@@ -67,7 +67,7 @@ React-VEREFOO extends vanilla VEREFOO with the ability to reuse an existing vali
 \end{algorithmic}
 \end{algorithm}
 
-React-VEREFOO issues a single MaxSMT call, just like vanilla VEREFOO, but the problem it encodes is smaller: only the nodes in the reconfigurable area appear as free decision variables. The efficiency gain therefore depends directly on how large $R_a$ is relative to the total NSR set — the smaller the added set, the fewer nodes are flagged, and the smaller the solver problem. This relationship is captured by the percentage of requirements kept: when most requirements are kept, React-VEREFOO is significantly faster than vanilla; when most requirements change, the benefit in time execution is reduced.
+React-VEREFOO issues a single MaxSMT call, just like vanilla VEREFOO, but the problem it encodes is smaller: only the nodes in the reconfigurable area appear as free decision variables. The efficiency gain therefore depends directly on how large $R_a$ is relative to the total NSR set — the smaller the added set, the fewer nodes are flagged, and the smaller the solver problem. This relationship is captured by the percentage of requirements kept: when most requirements are kept, React-VEREFOO is significantly faster than vanilla; when most requirements change, the benefit in execution time is reduced.
 
 At the implementation level, React-VEREFOO is invoked through the same \texttt{VerefooSerializer} constructor as the vanilla variant, with an additional boolean flag that enables the reconfiguration mode:
 
