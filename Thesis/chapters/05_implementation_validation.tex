@@ -329,25 +329,9 @@ The final result counts five firewalls enforcing all fifteen requested NSRs. The
 \subsection{A Closer Look: Tie-Breaking and Flow Analysis}
 \label{sec:tie-breaking-closer-look}
 
-\paragraph{Introduction.}
+When React-VEREFOO must allocate a new firewall to satisfy an isolation requirement, it is not unusual for two or more Allocation Places to turn out equally costly with respect to the requirement being processed: assuming each candidate, would need the same number of new rules, there is no reason to prefer one over the other at that stage. But it may happen that this is not neutrally propagated into the following iterations. If a later NSR happens to require reachability across that same link, Step 2 of the iterative process will find it blocked by the firewall just placed, and will need to reconfigure it with a new ALLOW exception. However, in an alternative scenario where the equally-cheap candidate would have been chosen, the later requirement might have found its path still open at later iteration, and been satisfied at zero cost. Both outcomes remain correct regardless of which candidate is chosen: the difference only relies on the number of configurations rules needed, not on their validity.
 
-This section studies one specific case from the test example above to illustrate a real dynamic that is worth considering for future work on the topic. When React-VEREFOO must allocate a new firewall to satisfy a requirement, two or more Allocation Places can turn out to be equally costly. In such cases, choosing one AP over another has no immediate impact on the cost of satisfying the current requirement, but, as shown below, it can still affect future iterations. This suggests that future versions of the tool could take traffic flow analysis into account, in order to decide which NSR to enforce first and obtain the satisfaction of later NSRs at lower cost.
-
-
-\paragraph{The case.}
-Iteration 2's tie between $\mathit{AP}(\text{Praha},\text{Tabor})$ and $\mathit{AP}(\text{Praha},\text{Pardubice})$ is worth revisiting in detail, because the two resolutions lead to visibly different outcomes especially for iteration 5. The two options are equivalent in terms of cost for $p_{12}$, but they differ in how they affect the reachability of Tabor $\to$ Usti n.L. when $p_{15}$ is later introduced. The two cases are summarized below.
-
-\paragraph{Case (a): the firewall is placed at $\mathit{AP}(\text{Praha},\text{Pardubice})$.} This is the resolution followed by the main trace above. $\mathit{AP}(\text{Praha},\text{Tabor})$ is left untouched, and when $p_{15}$ (Tabor $\to$ Usti n.L.) is introduced in iteration 5, its entire path is already open: the requirement is satisfied at zero cost, with no reconfiguration at all.
-
-\paragraph{Case (b): the firewall is placed at $\mathit{AP}(\text{Praha},\text{Tabor})$ instead.} In this alternative scenario however, allocating the new firewall enforced by $p_{12}$ at $\mathit{AP}(\text{Praha},\text{Tabor})$ would block every flow originating at Tabor, including the Tabor $\to$ Usti n.L. flow that $p_{15}$ will later request to be reachable. According to this, Step 2 of iteration 5 would find the Tabor $\to$ Usti n.L. flow already blocked by this same firewall, and the only candidate for reconfiguration would be the firewall itself: React-VEREFOO would add \texttt{ALLOW Tabor $\to$ Usti n.L.} to it. The requirement would still be satisfied and correct, but only through one additional reconfiguration not needed in the first case.
-
-% todo: riportare figura nel dettaglio di entrambe le opzioni disponibili per dare contesto; magari con colori diversi per evidenziare i due AP candidati e il percorso bloccato
-
-\paragraph{Discussion}
-
-The consideration worth mentioning is that both choices are valid and correct, but one (a) achieves the result at zero cost, while the other (b) requires a reconfiguration. Although minimal in this example, this is an illustrative case of how a tie-break decision can have consequences on the cost of satisfying future NSRs. $p_{12}$ itself is satisfied at identical cost either way, and the choice between the two candidates is left to the implementation of React-VEREFOO, with no visibility into future NSRs — which is exactly why the two cases only diverge later, in $p_{15}$, a requirement that does not even exist yet at the time when the tie is resolved.
-
-This observation points to a natural extension of the approach that falls outside the scope of this thesis: a \emph{traffic-aware} strategy may be considered for future work, applied before listing the NSRs and presenting them to the iterative version of React-VEREFOO, aiming to classify NSRs by their traffic flows and order them across iterations so as to minimize the number of future reconfigurations.
+This observation - taken as an example of several equally plausible scenarios taht couls arise elsewhere in the process - points to a natural extension of the approach, that falls outside the scope of this thesis: a \emph{traffic-aware} strategy may be considered for future work, applied before listing the NSRs and presenting them to the iterative version of React-VEREFOO, aiming to classify NSRs by their traffic flows and order them across iterations so as to minimize the number of future reconfigurations, or to break such ties by anticipating which candidate is less likely to be needed again later.
 
 \subsection{Discussion and Limitations}
 \label{sec:discussion-limitations}
