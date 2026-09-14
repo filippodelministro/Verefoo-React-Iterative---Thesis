@@ -1,0 +1,72 @@
+\documentclass[a4paper, 10pt, twocolumn]{article}
+
+% ── Packages ──────────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage[a4paper, top=2.5cm, bottom=2.5cm, left=2cm, right=2cm, columnsep=0.7cm]{geometry}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\raggedbottom
+
+\lstset{basicstyle=\ttfamily\small, breaklines=true, frame=single}
+
+\hypersetup{%
+    pdfpagemode={UseOutlines},
+    bookmarksopen,
+    pdfstartview={FitH},
+    colorlinks,
+    linkcolor={blue},
+    citecolor={red},
+    urlcolor={blue}
+}
+
+% ── Thesis metadata ───────────────────────────────────────────────────────────
+\newcommand{\thesistitle}{An incremental approach to automatic firewall configuration}
+\newcommand{\thesiscandidate}{Filippo Del Ministro}
+\newcommand{\thesissupervisors}{prof.\ Fulvio Valenza, prof.\ Daniele Bringhenti, prof.\ Francesco Pizzato}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{document}
+
+% ── Header (title, candidate, supervisors) spanning both columns ──────────────
+\twocolumn[{
+\centering
+{\LARGE\bfseries \thesistitle}\par
+\vspace{0.8em}
+\textbf{Candidate:} \thesiscandidate\par
+\textbf{Supervisors:} \thesissupervisors\par
+\vspace{1em}
+}]
+
+% ── Content: one section per thesis chapter ────────────────────────────────────
+
+\section{Introduction}\label{sec:introduction}
+[TODO]
+
+\section{Background}\label{sec:background}
+[TODO]
+
+\section{Thesis Objectives}\label{sec:objectives}
+[TODO]
+
+\section{The Iterative VEREFOO Approach}\label{sec:iterative}
+[TODO]
+
+\section{Implementation and Validation}\label{sec:implementation}
+[TODO]
+
+\section{Conclusion and Future Work}\label{sec:conclusions}
+[TODO]
+
+% ── Bibliography ─────────────────────────────────────────────────────────────
+% \bibliographystyle{ieeetr}
+% \bibliography{biblio}
+
+\end{document}
