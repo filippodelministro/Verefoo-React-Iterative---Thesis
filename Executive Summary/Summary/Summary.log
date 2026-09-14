@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2026.8.13)  14 SEP 2026 16:22
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2026.8.13)  14 SEP 2026 19:59
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -501,36 +501,95 @@ Package caption Info: listings package is loaded.
 Package caption Info: End \AtBeginDocument code.
 \c@lstlisting=\count308
 
-Underfull \hbox (badness 1552) in paragraph at lines 62--62
-[]\T1/cmr/bx/n/14.4 Implementation and Val-i-da-
+Underfull \hbox (badness 1755) in paragraph at lines 58--59
+[]\T1/cmr/m/n/10 This the-sis pro-poses to push the in-cre-men-tal
  []
 
+
+Underfull \hbox (badness 1259) in paragraph at lines 58--59
+\T1/cmr/m/n/10 prin-ci-ple to its ex-treme. Rather than pre-sent-
+ []
+
+<images/perimeter-firewall-architecture.png, id=31, 1478.52374pt x 1017.8025pt>
+
+File: images/perimeter-firewall-architecture.png Graphic file (type png)
+<use images/perimeter-firewall-architecture.png>
+Package pdftex.def Info: images/perimeter-firewall-architecture.png  used on in
+put line 66.
+(pdftex.def)             Requested size: 231.89001pt x 159.6214pt.
+<images/distributed-firewall-architecture.png, id=33, 1478.52374pt x 1017.8025p
+t>
+File: images/distributed-firewall-architecture.png Graphic file (type png)
+<use images/distributed-firewall-architecture.png>
+Package pdftex.def Info: images/distributed-firewall-architecture.png  used on 
+input line 73.
+(pdftex.def)             Requested size: 231.89001pt x 159.6214pt.
 [1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}
 
 
+ <./images/perimeter-firewall-architecture.png> <./images/distributed-firewall-
+architecture.png>]
+<images/iterative-approach.png, id=48, 2460.19125pt x 743.77875pt>
+File: images/iterative-approach.png Graphic file (type png)
+<use images/iterative-approach.png>
+Package pdftex.def Info: images/iterative-approach.png  used on input line 89.
+(pdftex.def)             Requested size: 231.89001pt x 70.1036pt.
+LaTeX Font Info:    Trying to load font information for T1+cmtt on input line 9
+8.
 
-] (./Summary.aux)
+(/usr/share/texlive/texmf-dist/tex/latex/base/t1cmtt.fd
+File: t1cmtt.fd 2019/12/16 v2.5j Standard LaTeX font definitions
+)
+(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd)
+(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd)
+<images/topologies/cesnet-iterative-solution.png, id=50, 1120.185pt x 731.73375
+pt>
+File: images/topologies/cesnet-iterative-solution.png Graphic file (type png)
+<use images/topologies/cesnet-iterative-solution.png>
+Package pdftex.def Info: images/topologies/cesnet-iterative-solution.png  used 
+on input line 122.
+(pdftex.def)             Requested size: 231.89001pt x 151.46904pt.
+ [2 <./images/iterative-approach.png>]
+<images/topologies/cesnet-monolithic-solution.png, id=62, 1120.185pt x 731.7337
+5pt>
+File: images/topologies/cesnet-monolithic-solution.png Graphic file (type png)
+<use images/topologies/cesnet-monolithic-solution.png>
+Package pdftex.def Info: images/topologies/cesnet-monolithic-solution.png  used
+ on input line 129.
+(pdftex.def)             Requested size: 231.89001pt x 151.46904pt.
+
+Underfull \hbox (badness 1552) in paragraph at lines 134--134
+[]\T1/cmr/bx/n/14.4 Implementation and Val-i-da-
+ []
+
+[3 <./images/topologies/cesnet-iterative-solution.png> <./images/topologies/ces
+net-monolithic-solution.png>] (./Summary.aux)
 Package rerunfilecheck Info: File `Summary.out' has not changed.
 (rerunfilecheck)             Checksum: 1A9F2100B69A4A793059C9FAEC4AC554;899.
  ) 
 Here is how much of TeX's memory you used:
- 13828 strings out of 480247
- 218765 string characters out of 5896151
- 514286 words of memory out of 5000000
- 31612 multiletter control sequences out of 15000+600000
- 473886 words of font info for 34 fonts, out of 8000000 for 9000
+ 13966 strings out of 480247
+ 222188 string characters out of 5896151
+ 531060 words of memory out of 5000000
+ 31707 multiletter control sequences out of 15000+600000
+ 480170 words of font info for 53 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 67i,5n,77p,302b,345s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 67i,10n,77p,999b,364s stack positions out of 5000i,500n,10000p,200000b,80000s
  </sessions/blissful-zen-hawking/.texlive2021/texmf-var/fonts/pk/ljfour/jknap
-pen/ec/ecbx1440.600pk> </sessions/blissful-zen-hawking/.texlive2021/texmf-var/f
-onts/pk/ljfour/jknappen/ec/ecrm1000.600pk> </sessions/blissful-zen-hawking/.tex
-live2021/texmf-var/fonts/pk/ljfour/jknappen/ec/ecbx1000.600pk> </sessions/bliss
-ful-zen-hawking/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/ecbx1728.600
-pk>
-Output written on Summary.pdf (1 page, 33239 bytes).
+pen/ec/ecrm0800.600pk> </sessions/blissful-zen-hawking/.texlive2021/texmf-var/f
+onts/pk/ljfour/jknappen/ec/ecbx0800.600pk> </sessions/blissful-zen-hawking/.tex
+live2021/texmf-var/fonts/pk/ljfour/jknappen/ec/ecti1000.600pk> </sessions/bliss
+ful-zen-hawking/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/ectt1000.600
+pk> </sessions/blissful-zen-hawking/.texlive2021/texmf-var/fonts/pk/ljfour/jkna
+ppen/ec/ecbx1440.600pk> </sessions/blissful-zen-hawking/.texlive2021/texmf-var/
+fonts/pk/ljfour/jknappen/ec/ecrm1000.600pk> </sessions/blissful-zen-hawking/.te
+xlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/ecbx1000.600pk> </sessions/blis
+sful-zen-hawking/.texlive2021/texmf-var/fonts/pk/ljfour/jknappen/ec/ecbx1728.60
+0pk>
+Output written on Summary.pdf (3 pages, 397052 bytes).
 PDF statistics:
- 156 PDF objects out of 1000 (max. 8388607)
- 52 compressed objects within 1 object stream
- 8 named destinations out of 1000 (max. 500000)
- 49 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 313 PDF objects out of 1000 (max. 8388607)
+ 89 compressed objects within 1 object stream
+ 16 named destinations out of 1000 (max. 500000)
+ 74 words of extra memory for PDF output out of 10000 (max. 10000000)
 
